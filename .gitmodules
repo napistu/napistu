@@ -1,0 +1,9 @@
+[submodule "lib/napistu-py"]
+	path = lib/napistu-py
+	url = https://github.com/napistu/napistu-py.git
+[submodule "lib/napistu-r"]
+	path = lib/napistu-r
+	url = https://github.com/napistu/napistu-r.git
+[submodule "lib/napistu-scrapyard"]
+	path = lib/napistu-scrapyard
+	url = https://github.com/napistu/napistu-scrapyard.git
