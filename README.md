@@ -20,6 +20,8 @@ This repository includes tutorials and documentation for the project while the f
 - **[napistu-py](https://github.com/napistu/napistu-py)** - Napistu Python library: the core implementations of pathway representations and network-based searches.
 - **[napistu-r](https://github.com/napistu/napistu-r)** - Napistu R library: R-based network visualization and a few utilities called from `napitsu-py`.
 
+Naptisu is a rebrand and extension of [Calico Pathway Resources (CPR)](https://github.com/calico/opencpr): see [History](https://github.com/napistu/napistu/wiki/History).
+
 # Using Napistu
 
 ## Tutorials
