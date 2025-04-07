@@ -1,0 +1,61 @@
+---
+title: "Tutorial - Working with Genome-Scale Networks"
+author: "Shackett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    code-summary: "Show the code"
+    toc: true
+    theme: minty
+    highlight: tango
+    code-block-bg: true
+    code-block-border-left: "#5BB867"
+jupyter: open_cpr_tutorials
+---
+
+```{python}
+#| label: config
+import logging
+logger = logging.getLogger()
+logger.setLevel("INFO")
+
+import pandas as pd
+
+from cpr import utils
+
+import tutorial_utils
+
+config = tutorial_utils.CprConfig("config.yaml", "working_with_genome_scale_pathways")
+# load Reactome xrefs
+tutorial_utils.load_tutorial_asset("reactome_members", config)
+tutorial_utils.load_tutorial_asset("reactome_xrefs", config)
+```
+
+## Debugging
+
+```{python}
+sbml_dfs = utils.load_pickle(CONSENSUS_PKL)
+sbml_dfs.get_network_summary()["n_reactions"]
+# 1.67 M reactions
+```
+
+This notebook demonstrates how to use CPR's network-based approaches to interrogate a prime-time human multi-source pathway model.
+
+This model, produced by running `1_workflow_cpr_cli.qmd` combines 5 distinct sources:
+- Reactome: 2,000+ Reactome pathways aggregated into a single graph of genes, complexes, and molecules.
+- TRRUST: TF->target regulatory relationships
+- Recon3D (aka BiGG): a genome-scale metabolic model
+- STRING: consensus, non-mechanistic interactions
+- Dogmatic Scaffold - a model which just links cognate, genes, transcript, and proteins to promote merging of like-species.
+
+First, we'll load the `sbml_dfs` pathway representation and a `cpr_graph` object which translates this information into a graph of vertices and edges.
+
+Then, we'll demo the shortest paths problem, where we try to find the shortest path between two molecular species. On a densely connected network there will be many equally lengths paths most of which are meaningless.
+
+TO DO - we need a notebook talking more about edge weighting and passing vertex attributes. When we are using a weighted networks there are few equivalent paths - in this case the shortest weighted paths is the path which minimizes the summed edge weights.
+
+Finally, we'll identify a set of neighbors around a focal vertex to build its molecular neighborhood.
+
+These approaches are often sped up by precomputing the distances between pairs of molecules. Look at the `1_precomputed_distances.ipynb` if you want to learn more.

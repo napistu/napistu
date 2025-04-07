@@ -1,0 +1,125 @@
+---
+title: "Tutorial - Formatting an sbml_dfs as a cpr_graph"
+author: "Shackett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    code-summary: "Show the code"
+    toc: true
+    theme: minty
+    highlight: tango
+    code-block-bg: true
+    code-block-border-left: "#5BB867"
+jupyter: open_cpr_tutorials
+---
+
+`sbml_dfs` objects are stand-alone representations of pathways but they need to be formatted as a `cpr_graph` object if we want to use them as a network. Doing this will allow us to translate a range of biological questions into network operations - see **suggesting_mechanisms_with_networks.qmd**.
+
+Here, we will go through the process of translating pathways into graphs and how to precompute distances between molecular species (to speed up search). Its at this stage that we can also add high-dimensional data to our graph but that is discussed as a separate vignette - **adding_data_to_graphs.qmd**.
+
+```{python}
+#| label: config
+import logging
+logger = logging.getLogger()
+logger.setLevel("INFO")
+
+from cpr import utils
+
+from cpr.network import net_create
+from cpr.network import precompute
+
+import tutorial_utils
+config = tutorial_utils.CprConfig("config.yaml", "formatting_sbml_dfs_as_cpr_graphs")
+```
+
+## Load an `sbml_dfs` pathway representation
+
+A `sbml_dfs`, further described in the `understanding_sbml_dfs.qmd` vignette, is a stand-alone representation of a pathway. Here, we load a pickled `sbml_dfs` object that we will use to create a `cpr_graph`. The model here was created from a few metabolic pathways from Reactome merged into a consensus model.
+
+```{python}
+#| label: load_data
+from cpr import utils
+
+sbml_dfs_path = config.load_asset("test_pathway", "sbml_dfs")
+sbml_dfs = utils.load_pickle(sbml_dfs_path)
+```
+
+## Create a Network
+
+CPR's strategy for translating an `sbml_dfs` object into a graph is thoroughly described in the  [CPR Wiki - CPR Graphs](https://github.com/calico/Open-CPR/wiki/CPR-Graphs). Briefly, we can create a graph using a single function `process_cpr_graph` which creates and weights the network or we can divide these calls up by `igraph_network` and `add_graph_weights`.
+
+Here, we will create a network using the `regulatory` graph specification which places an appropriate hierarchy over molecules participating in the same reaction so for instance an enzyme will be upstream of its substrate (since the enzyme regulates the substrate not the other way around). We'll also create a directed graph since the `sbml_dfs` pertains to a metabolic pathway where directionality can be appropriately inferred from reaction stoichiometry.
+
+```{python}
+#| label: sbml_dfs_to_cpr
+cpr_graph = net_create.process_cpr_graph(
+  sbml_dfs,
+  graph_type = "regulatory",
+  directed = True
+)
+```
+
+## Inspecting the Network
+
+The `cpr_graph` is really just an `igraph` `Graph` object with some specific vertex and edge attributes. Let's take a look at the vertices and edges. To make this easier we'll do this in a tabular format.
+
+```{python}
+#| label: graph_to_dfs
+
+from cpr.network import net_utils
+vertices, edges = net_utils.cpr_graph_to_pandas_dfs(cpr_graph)
+```
+
+### Vertices: Genes, Metabolites, Reactions, ...
+
+```{python}
+#| label: vertices
+utils.style_df(vertices.head())
+```
+
+### Edges: Linking Pairs of Vertices
+
+```{python}
+#| label: edges
+utils.style_df(vertices.head())
+```
+
+### Network Visualization
+
+The network visualization methods in CPR are better built-out on the R side. But for quick-and-dirty network visualization we can use the standard igraph visualization functions and some plotting wrappers within CPR.
+
+```{python}
+from cpr.network import neighborhoods
+
+neighborhoods.plot_neighborhood(
+    net_utils.filter_to_largest_subgraph(cpr_graph),
+    name_nodes = True,
+    plot_size = 2000,
+    network_layout = "kk" 
+)
+```
+
+## Precompute Distances
+
+Some network operations can be sped up by precomputing distances between nodes. This is particularly useful for shortest path algorithms. Here we precompute the shortest path distances and weighted shortest paths (if weights are present) between all pairs of nodes in the graph.
+
+```{python}
+#| label: precomputed_distances
+distances = precompute.precompute_distances(cpr_graph)
+
+utils.style_df(distances.head(5))
+```
+
+As a quick look into this output we can create a table of the # of steps to progress from source to destination vertices.
+
+```{python}
+#| label: plot_precomputed_distance
+import numpy as np 
+from pandas import DataFrame
+import seaborn as sns
+
+df = distances.pivot(index='sc_id_origin', columns='sc_id_dest', values='path_length')
+sns.heatmap(df, annot=False)
+```

@@ -1,0 +1,217 @@
+---
+title: "Tutorial - Suggesting mechanisms with networks"
+author: "Shackett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    code-summary: "Show the code"
+    toc: true
+    theme: minty
+    highlight: tango
+    code-block-bg: true
+    code-block-border-left: "#5BB867"
+jupyter: open_cpr_tutorials
+---
+
+One of the primary goals of CPR is providing network-based answers to biological questions such as:
+- how are species *X* and *Y* connected?
+- what are the regulators of *X* and what are its downstream targets?
+- what are common patterns shared among a set of species: {*X*, *Y*, *Z*, ...}?
+
+```{python}
+#| label: config
+import logging
+logger = logging.getLogger()
+logger.setLevel("INFO")
+
+import tutorial_utils
+config = tutorial_utils.CprConfig("config.yaml", "suggesting_mechanisms_with_networks")
+tutorial_utils.load_tutorial_asset("test_pathway", config)
+```
+
+```{python}
+#| label: env
+import pandas as pd
+
+from cpr import sbml_dfs_core
+from cpr import mechanism_matching
+from cpr import utils
+
+from cpr.network import net_create
+from cpr.network import paths
+from cpr.network import neighborhoods
+from cpr.network import net_utils
+
+sbml_dfs = utils.load_pickle(config.artifacts["sbml_dfs"])
+cpr_graph = utils.load_pickle(config.artifacts["cpr_graph"])
+```
+
+For this tutorial we will work with the "test pathway" which is bundled with Open CPR. This is small metabolic model covering human central carbon metabolism. 
+
+## Overview of `cpr_graph`
+
+Before we start exploring the metabolic model as a graph, we can first visualize its overall structure. 
+
+Doing this we'll create a version of the network using the `surrogate` layout. The key feature of this layout is that it places enzymes downstream of their substrates. This doesn't make sense from a regulatory perspective (the substrate is modified by the enzyme not the other way around), but it does make sense for descriptive visualization of networks. 
+
+```{python}
+#| label: create_and_visualize_surrogate_graph
+# create the surrogate graph
+cpr_graph_surrogate = net_create.process_cpr_graph(sbml_dfs, graph_type = "surrogate")
+
+# network visualization
+neighborhoods.plot_neighborhood(
+    net_utils.filter_to_largest_subgraph(cpr_graph_surrogate),
+    name_nodes = True,
+    plot_size = 2000,
+    network_layout = "kk" 
+)
+```
+
+The networks used in cpr are just `igraph` `Graph` object with some additional vertex and edge attributes which are cpr-specific. This allows us to create, manipulate and visualize networks with igraph's extensive library, while also utilize the growing suite of network-based analysis approaches in CPR.
+
+## Shortest paths
+
+### Define source and destination species
+
+As an example we can try and find a pathway between glucose and pyruvate on the graph. 
+
+```{python}
+#| label: select_origin_and_dest_species
+S_NAME_ORIGIN = "Glc"
+S_NAME_DEST = "PYR"
+
+all_species = sbml_dfs.species["s_name"].tolist()
+all_species.sort()
+all_species_str = ', '.join([f"'{x}'" for x in all_species])
+print(all_species_str)
+```
+
+```{python}
+#| label: inspect_source_and_dest
+species = sbml_dfs.species
+
+source_species = species[species["s_name"] == S_NAME_ORIGIN]
+for spec in source_species.index:
+    print("\n" + spec + "\n")
+    display(sbml_dfs_core.species_status(spec, sbml_dfs))
+
+dest_species = species[species["s_name"] == S_NAME_DEST]
+for spec in dest_species.index:
+    print("\n" + spec + "\n")
+    display(sbml_dfs_core.species_status(spec, sbml_dfs))
+```
+
+Since CPR reactions relate molecular species in a specific compartment (compartmentalized species), we need to find the cspecies which match the source and target species. In a compartmentalized model the source and destination species may exist in multiple compartments so we'll try to identify the path from each source cspecies to each destination cspecies.
+
+```{python}
+#| label: compartmentalize_for_paths
+target_species_paths = net_utils.compartmentalize_species_pairs(
+    sbml_dfs, source_species.index.tolist(), dest_species.index.tolist()
+)
+target_species_paths
+```
+
+### Find all shortest weighted paths between the source and destination species
+
+```{python}
+#| label: find_shortest_paths
+(
+    all_shortest_reaction_paths_df,
+    all_shortest_reaction_path_edges_df,
+    edge_sources,
+    paths_graph,
+) = paths.find_all_shortest_reaction_paths(
+    cpr_graph, sbml_dfs, target_species_paths, weight_var="weights"
+)
+```
+
+```{python}
+#| label: shortest_path
+with pd.option_context(
+    "display.max_rows", None, "display.max_columns", None, "display.max_colwidth", None
+):  # more options can be specified also
+    display(all_shortest_reaction_path_edges_df.query("path == 0"))
+    display(all_shortest_reaction_path_edges_df.query("path == 0"))
+```
+
+```{python}
+#| label: plot_shortest_paths
+paths.plot_shortest_paths(paths_graph)
+```
+
+### Scaling Shortest Paths with Mechanism Matching
+
+```{python}
+#| label: mock_edgelist
+edgelist = pd.DataFrame([
+    {"identifier_upstream" : "17925", "identifier_downstream" : "32966"}, # glu, fbp
+    {"identifier_upstream" : "57634", "identifier_downstream" : "32966"}, # f6p, fbp
+    {"identifier_upstream" : "32966", "identifier_downstream" : "57642"}, # fbp, dhap
+    {"identifier_upstream" : "17925", "identifier_downstream" : "15361"}, # glu, pyr
+])
+
+species_identifiers = sbml_dfs.get_identifiers("species")
+```
+
+#### Direct interactions
+
+Participants in the same reaction
+
+```{python}
+#| label: direct_interactions
+direct_interactions = mechanism_matching.filter_to_direct_mechanistic_interactions(
+    formatted_edgelist=edgelist,
+    sbml_dfs=sbml_dfs,
+    species_identifiers=species_identifiers,
+    ontologies = {"chebi"}
+)
+
+utils.style_df(direct_interactions)
+```
+
+#### Indirect interactions
+
+Finding paths between all pairs of vertices
+
+```{python}
+#| label: indirect_interactions
+indirect_interactions = mechanism_matching.filter_to_indirect_mechanistic_interactions(
+    formatted_edgelist=edgelist,
+    sbml_dfs=sbml_dfs,
+    species_identifiers=species_identifiers,
+    cpr_graph=cpr_graph,
+    ontologies = {"chebi"},
+    precomputed_distances=None,
+    max_path_length=10,
+)
+
+utils.style_df(indirect_interactions.assign(vpath = "###").assign(epath = "###"))
+```
+
+## Find neighbors within N steps of a species
+
+```{python}
+#| label: create_hourglass
+# select the focal species to center the neighborhood on (like in the previous examples we'll use glucose
+
+focal_species = species[species["s_name"] == S_NAME_ORIGIN].index.tolist()
+
+focal_sc_species = net_utils.compartmentalize_species(sbml_dfs, focal_species)["sc_id"].tolist()
+
+neighbors = neighborhoods.find_neighborhoods(
+    sbml_dfs,
+    cpr_graph,
+    compartmentalized_species=focal_sc_species,
+    network_type="hourglass",
+    order=6,
+)
+
+pruned_neighborhoods = neighborhoods.prune_neighborhoods(neighbors, top_n=10)
+
+neighborhoods.plot_neighborhood(
+    pruned_neighborhoods[focal_sc_species[0]]["graph"], True
+)
+```

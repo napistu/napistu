@@ -1,0 +1,38 @@
+---
+title: "Tutorial - Merging Networks into a Consensus"
+author: "Shackett"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    code-summary: "Show the code"
+    toc: true
+    theme: minty
+    highlight: tango
+    code-block-bg: true
+    code-block-border-left: "#5BB867"
+jupyter: open_cpr_tutorials
+---
+
+This notebook will show you how to use the `consensus` module to merge multiple pathway models into a single consensus. A description of the logic and algorithms underpinning the consensus model can be found in the [CPR Wiki](https://github.com/calico/Open-CPR/wiki/Consensus).
+
+First, we'll merge a few different Reactome .sbml files into a consensus which are conveniently located the CPR packages test data.
+
+```{python}
+#| label: config
+import logging
+logger = logging.getLogger()
+logger.setLevel("INFO")
+
+import tutorial_utils
+config = tutorial_utils.CprConfig("config.yaml", "merging_models_into_a_consensus")
+```
+
+```{python}
+pw_index = indices.PWIndex(os.path.join(test_data, "pw_index.tsv"))
+sbml_dfs_dict = consensus.construct_sbml_dfs_dict(pw_index)
+
+consensus_model = consensus.construct_consensus_model(sbml_dfs_dict, pw_index)
+
+```

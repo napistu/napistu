@@ -1,0 +1,367 @@
+---
+title: "Create Human Consensus"
+author: "Shackett"
+date: "2025-01-29"
+format:
+  html:
+    embed-resources: true
+    code-fold: false
+    toc: true
+    theme: minty
+    highlight: tango
+    code-block-bg: true
+    code-block-border-left: "#5BB867"
+---
+
+## Intro
+
+This document highlights how we can use the CPR command line interface (CLI) to build pathway representations. We'll do this with a bunch of `bash` calls run through a quarto document. The CPR CLI is defined in the [__main__.py](https://github.com/calico/calicolabs-open-cpr-py/blob/main/src/cpr/__main__.py) file of calicolabs-open-cpr-py. Most of the commands are light-weight wrappers around CPR functions which exist to facilitate the creation of Dockerized pipelines. Here, we'll skip Dockerization and instead use a local python environment to run the CLI.
+
+To make use of the CPR CLI we first need a python environment with the `cpr` package installed. We could do this by sourcing an environment in each bash call but instead here I just set the environment with `reticulate` so the python environment is available to all bash code cells. (I tried this with Python Quarto but Jupyter doesn't support multi-language workflows and this script is too chunky to be run as a single shell script.)
+
+```{r python_config}
+reticulate::use_virtualenv("./env", required = TRUE)
+reticulate::py_config()
+```
+
+To check configuration, we can see that my default python is the one set by reticulate:
+
+```{bash which_python}
+which python
+```
+
+```{bash}
+# Since we are using the CPR CLI, the version of R that is detected by
+# Rpy2 will generally be the system version (or an alias). This version will
+# need to be configured with rcpr and its dependencies such as arrow.
+which R
+R --version
+```
+
+Within this virtual env we can access the CPR CLI using `python -m cpr ...`. These CLI options are configured in calico-open-cpr-py's `main.py`.
+
+```{bash cli_demo}
+python -m cpr --help
+```
+
+Now, we can set some global parameters which should be consistent across bash cells.
+
+```{bash env_config}
+yaml() {
+    python3 -c "import yaml;print(yaml.safe_load(open('$1'))$2)"
+}
+
+# https://stackoverflow.com/questions/60569395/set-environment-variable-in-bash-in-rmarkdown
+WORKING_DIRECTORY="<<PATH_TO_CPR_DATA>>/human_consensus"
+CACHE_DIRECTORY="cache"
+EXPORT_DIRECTORY="human_consensus"
+SBML_DFS_FILE="sbml_dfs.pkl"
+SBML_DFS_TABLES_DIR="sbml_dfs_tables"
+REGULATORY_GRAPH_FILE="regulatory_graph.pkl"
+REGULATORY_DISTANCES_FILE="regulatory_distances.json"
+IDENTIFIERS_FILE="identifiers.tsv"
+
+# create paths
+CACHE_DIR_PATH=$WORKING_DIRECTORY/$CACHE_DIRECTORY
+EXPORT_DIR_PATH=$WORKING_DIRECTORY/$EXPORT_DIRECTORY
+SBML_DFS_OUT_PATH=$EXPORT_DIR_PATH/$SBML_DFS_FILE
+REGULATORY_GRAPH_OUT_PATH=$EXPORT_DIR_PATH/$REGULATORY_GRAPH_FILE
+REGULATORY_DISTANCES_OUT_PATH=$EXPORT_DIR_PATH/$REGULATORY_DISTANCES_FILE
+# we don't care about all of the table exports for the GCS data package; just the identifiers
+SBML_DFS_TABLES_OUT_PATH=$CACHE_DIR_PATH/$SBML_DFS_TABLES_DIR
+IDENTIFIERS_OUT_PATH=$EXPORT_DIR_PATH/$IDENTIFIERS_FILE
+
+# create directories if needed
+mkdir -p $CACHE_DIR_PATH
+mkdir -p $EXPORT_DIR_PATH
+
+# save variables to a file so they can be sourced in other bash cells
+rm -f .rvars || true
+echo -n 'export CACHE_DIR_PATH=' >> .rvars
+echo $CACHE_DIR_PATH >> .rvars
+echo -n 'export EXPORT_DIR_PATH=' >> .rvars
+echo $EXPORT_DIR_PATH >> .rvars
+echo -n 'export SBML_DFS_OUT_PATH=' >> .rvars
+echo $SBML_DFS_OUT_PATH >> .rvars
+echo -n 'export REGULATORY_GRAPH_OUT_PATH=' >> .rvars
+echo $REGULATORY_GRAPH_OUT_PATH >> .rvars
+echo -n 'export REGULATORY_DISTANCES_OUT_PATH=' >> .rvars
+echo $REGULATORY_DISTANCES_OUT_PATH >> .rvars
+echo -n 'export SBML_DFS_TABLES_OUT_PATH=' >> .rvars
+echo $SBML_DFS_TABLES_OUT_PATH >> .rvars
+echo -n 'export IDENTIFIERS_OUT_PATH=' >> .rvars
+echo $IDENTIFIERS_OUT_PATH >> .rvars
+
+source .rvars
+echo CACHE_DIR_PATH=$CACHE_DIR_PATH
+echo EXPORT_DIR_PATH=$EXPORT_DIR_PATH
+echo SBML_DFS_OUT_PATH=$SBML_DFS_OUT_PATH
+echo SBML_DFS_TABLES_OUT_PATH=$SBML_DFS_TABLES_OUT_PATH
+echo REGULATORY_GRAPH_OUT_PATH=$REGULATORY_GRAPH_OUT_PATH
+echo REGULATORY_DISTANCES_OUT_PATH=$REGULATORY_DISTANCES_OUT_PATH
+echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
+```
+
+# Format Pathways
+
+## Reactome
+
+- Download and untar a directory of Reactome `.sbml` files
+- Combine all of the human models into a single `sbml_dfs` pathway
+
+```{bash load_reactome}
+echo "Downloading Reactome data to $CACHE_DIR_PATH/reactome"
+source .rvars
+python -m cpr load reactome $CACHE_DIR_PATH/reactome
+```
+
+```{bash integrate_reactome}
+source .rvars
+PW_INDEX=$CACHE_DIR_PATH/reactome/sbml/pw_index.tsv
+OUTPUT_URI=$CACHE_DIR_PATH/reactome/reactome.pkl
+
+echo "Integrating Reactome data from $PW_INDEX and saving results to $OUTPUT_URI"
+# use the --permissive flag because one human pathway (out of ~2500) is malformed right now
+python -m cpr integrate reactome --permissive --species "Homo sapiens" $PW_INDEX $OUTPUT_URI
+```
+
+## TRRUST
+
+- Download TRRUST edgelist
+- Add additional identifiers and save the result as an `sbml_dfs` pathway
+
+```{bash trrust}
+source .rvars
+
+echo "Downloading TF to target edges from TRRUST and creating an sbml_dfs model at $CACHE_DIR_PATH/trrust.pkl"
+python -m cpr load trrust $CACHE_DIR_PATH/trrust.tsv
+# requires R rcpr for adding additional identifiers
+python -m cpr integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/trrust.pkl
+```
+
+## STRING
+
+- Download the STRING interaction edgelist (with evidence weights)
+- Download STRING aliases which link STRING genes to other ontologies
+- Integrate STRING to create an `sbml_dfs` pathway
+- Download Human Protein Atlas (HPA) protein subcellular localizations
+- Filter STRING edges to proteins which exist in the same compartment
+
+```{bash string}
+source .rvars
+
+echo "Downloading results from STRING and HPA and integrating them to create a STRING sbml_dfs model at $CACHE_DIR_PATH/hpa_filtered_string.pkl"
+python -m cpr load string-db --species "Homo sapiens" $CACHE_DIR_PATH/string_db
+python -m cpr load string-aliases --species "Homo sapiens" $CACHE_DIR_PATH/string_aliases
+python -m cpr integrate string-db -o $CACHE_DIR_PATH/string_db $CACHE_DIR_PATH/string_aliases $CACHE_DIR_PATH/string.pkl
+python -m cpr load proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell
+# requires R rcpr for filtering based on shared compartments
+python -m cpr refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_DIR_PATH/hpa_subcell $CACHE_DIR_PATH/hpa_filtered_string.pkl
+```
+
+## Metabolic model - recon3D
+
+- Download the relevant model (we actually download a few models for different species (yeast, mouse, human) at the same time).
+- Integrate BiGG - calls [construct_bigg_consensus] which creates an `sbml_dfs` model and patches some weirdness in the BiGG models (e.g., missing compartments). Some of this may not be needed now since we add the "resolve" logic to `SBML_dfs` via `validate_and_resolve`.
+- Add Ensembl gene IDs (so BiGG models are appropriately merged with other models)
+
+```{bash bigg}
+source .rvars
+
+echo "Downloading BiGG metabolic models and formatting the human model (Recon3D) as an sbml_dfs model at $CACHE_DIR_PATH/bigg_w_ids.pkl"
+python -m cpr load bigg $CACHE_DIR_PATH/bigg
+python -m cpr integrate bigg --species "Homo sapiens" $CACHE_DIR_PATH/bigg/pw_index.tsv $CACHE_DIR_PATH/bigg.pkl
+# requires R rcpr for updating identifiers
+python -m cpr refine expand_identifiers --species "Homo sapiens" --ontologies "ensembl_gene" $CACHE_DIR_PATH/bigg.pkl $CACHE_DIR_PATH/bigg_w_ids.pkl
+```
+
+## Dogmatic Scaffold
+
+This model just contains proteins (with BQB_IS annotations) and their associated genes and transcripts (with BQB_IS_ENCODED_BY annotations).
+
+```{bash dogma}
+source .rvars
+
+echo "Creating a dogmatic scaffold sbml_dfs model and saving results to $CACHE_DIR_PATH/dogma_sbml_dfs.pkl"
+python -m cpr integrate dogmatic_scaffold --species "Homo sapiens" $CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+```
+
+# Unify compartmentalization
+
+- Each model's species should be defined with the same precision. Here, we'll just "uncompartmentalize" all species so there is effectively no notion of compartmentalization.
+
+```{bash uncompartmentalize}
+source .rvars
+
+echo "Uncompartmentalizing all compartmentalized models"
+python -m cpr refine merge_model_compartments $CACHE_DIR_PATH/reactome/reactome.pkl $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
+python -m cpr refine merge_model_compartments $CACHE_DIR_PATH/trrust.pkl $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
+python -m cpr refine merge_model_compartments $CACHE_DIR_PATH/bigg_w_ids.pkl $CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
+```
+
+# Consensus
+
+```{bash consensus}
+source .rvars
+reactome_input=$CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
+string_input=$CACHE_DIR_PATH/hpa_filtered_string.pkl
+trrust_input=$CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
+bigg_input=$CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
+dogma_input=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+output_uri=$CACHE_DIR_PATH/consensus.pkl
+
+echo "Building a multisource network from: Reactome ($reactome_input), STRING ($string_input), TRRUST ($trrust_input), BiGG ($bigg_input), and Dogma ($dogma_input) and saving results to $output_uri"
+python -m cpr consensus create --nondogmatic $reactome_input $string_input $trrust_input $bigg_input $dogma_input $output_uri
+```
+
+# Add Reactome metadata
+
+## Entity Sets - complexes, ligands, ...
+
+```{bash add_reactome_entity_sets}
+source .rvars
+# globals
+ENTITY_SET_CSV=/group/cpr/open_cpr_tmp_files/external_pathways_reactome_neo4j_members.csv
+
+input_uri=$CACHE_DIR_PATH/consensus.pkl
+entity_set_path=$REACTOME_FLAT_DIR/$ENTITY_SET_CSV
+output_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
+
+
+if [[ -f $input_uri ]] && [[ -f $entity_set_path ]]; then
+    echo "Adding qualitative grouping of species (Reactome entity sets) $input_uri from the entity sets file at $entity_set_path and saving results to $output_uri"
+    python -m cpr refine add_reactome_entity_sets $input_uri $entity_set_path $output_uri
+else
+    if [[ -f $input_uri ]]; then
+        echo "Missing Model at $input_uri"
+    fi
+    if [[ -f $entity_set_path ]]; then
+        echo "Missing entity sets at $entity_set_path"
+    fi
+fi
+```
+
+## Additional identifiers from Reactome xrefs
+
+```{bash add_reactome_xrefs}
+source .rvars
+# globals
+CROSSREF_CSV=/group/cpr/open_cpr_tmp_files/external_pathways_reactome_neo4j_crossref.csv
+
+input_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
+xref_set_path=$REACTOME_FLAT_DIR/$CROSSREF_CSV
+output_uri=$CACHE_DIR_PATH/consensus_w_xrefs.pkl
+
+if [[ -f $input_uri ]] && [[ -f $xref_set_path ]]; then
+    echo "Adding additional identifiers to $input_uri from the Reactome cross-ref file at $xref_set_path and saving results to $output_uri"
+    python -m cpr refine add_reactome_identifiers $input_uri $xref_set_path $output_uri
+else
+    if [[ -f $input_uri ]]; then
+        echo "Missing Model at $input_uri"
+    fi
+    if [[ -f $xref_set_path ]]; then
+        echo "Missing Xrefs at $xref_set_path"
+    fi
+fi
+```
+
+# Drop cofactors
+
+```{bash remove_cofactors}
+source .rvars
+input_uri=$CACHE_DIR_PATH/consensus_w_xrefs.pkl
+output_uri=$SBML_DFS_OUT_PATH
+
+if [[ -f $input_uri ]] ; then
+    echo "Dropping cofactors from $input_uri and saving results to $output_uri"
+    python -m cpr refine drop_cofactors $input_uri $output_uri
+else
+    echo "Missing $input_uri"
+fi
+```
+
+# Export igraph representation and other results
+
+## igraph
+
+```{bash export_igraph}
+source .rvars
+input_uri=$SBML_DFS_OUT_PATH
+output_uri=$REGULATORY_GRAPH_OUT_PATH
+
+if [[ -f $input_uri ]] ; then
+    echo "Generating a regulatory graph from $input_uri and saving results to $output_uri"
+    python -m cpr exporter export_igraph -a graph_attrs_spec.yaml -g regulatory -w mixed $input_uri $output_uri
+else
+    echo "Missing $input_uri"
+fi
+```
+
+## Precomputed distances
+
+```{bash export_distances}
+source .rvars
+input_uri=$REGULATORY_GRAPH_OUT_PATH
+output_uri=$REGULATORY_DISTANCES_OUT_PATH
+
+if [[ -f $input_uri ]] ; then
+    echo "Calculating pre-computed distances from $input_uri and saving results to $output_uri"
+    python -m cpr exporter export_precomputed_distances -s 5 $input_uri $output_uri
+else
+    echo "Missing $input_uri"
+fi
+```
+
+## smbl_dfs_tables
+
+```{bash export_smbl_dfs_tables}
+source .rvars
+input_uri=$SBML_DFS_OUT_PATH
+output_uri=$SBML_DFS_TABLES_OUT_PATH
+
+python -m cpr exporter export_smbl_dfs_tables --nondogmatic $input_uri $output_uri
+```
+
+## Relocate sbml_dfs tables
+
+```{bash}
+source .rvars
+cp $SBML_DFS_TABLES_OUT_PATH/species_identifiers.tsv $IDENTIFIERS_OUT_PATH
+```
+
+## Tar and gzip
+
+```{bash}
+source .rvars
+
+tar_gz_uri="$CACHE_DIR_PATH/human_consensus.tar.gz"
+distances_filename=$(basename "$REGULATORY_DISTANCES_OUT_PATH")
+# Get a list of all files in the directory, excluding the distances file,
+# and outputting relative paths
+include_files=$(find "$EXPORT_DIR_PATH" -maxdepth 1 -not -name "$distances_filename" -printf "%P\0" | tr '\0' ' ')
+
+echo "Taring and g-zipping the $EXPORT_DIR_PATH (excluding $distances_filename) as $tar_gz_uri"
+echo "Include Files: '$include_files'" # Debugging - make sure this looks correct
+
+tar -czvf "$tar_gz_uri" -C "$EXPORT_DIR_PATH" $include_files
+```
+
+### With precomputed distances
+
+```{bash}
+source .rvars
+tar_gz_uri=$CACHE_DIR_PATH/human_consensus_w_distances.tar.gz
+echo "Taring and g-zipping the $EXPORT_DIR_PATH as $tar_gz_uri"
+
+tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH .
+```
+
+## Sync with GCS
+
+```{bash}
+source .rvars
+gcloud config set project <<PUBLIC_GCS_BUCKET>>
+gsutil cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://<<PUBLIC_GCS_BUCKET>>/human_consensus.tar.gz
+gsutil cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://<<PUBLIC_GCS_BUCKET>>/human_consensus_w_distances.tar.gz
+```
+
