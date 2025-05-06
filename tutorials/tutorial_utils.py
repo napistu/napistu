@@ -11,8 +11,8 @@ import yaml
 from pydantic import BaseModel
 from pydantic import ValidationError
 
-from cpr import utils
-from cpr.gcs import downloads
+from napistu import utils
+from napistu.gcs import downloads
 
 logger = logging.getLogger(__name__)
 

@@ -25,10 +25,10 @@ import logging
 logger = logging.getLogger()
 logger.setLevel("INFO")
 
-from cpr import utils
+from napistu import utils
 
-from cpr.network import net_create
-from cpr.network import precompute
+from napistu.network import net_create
+from napistu.network import precompute
 
 import tutorial_utils
 config = tutorial_utils.CprConfig("config.yaml", "formatting_sbml_dfs_as_cpr_graphs")
@@ -40,7 +40,7 @@ A `sbml_dfs`, further described in the `understanding_sbml_dfs.qmd` vignette, is
 
 ```{python}
 #| label: load_data
-from cpr import utils
+from napistu import utils
 
 sbml_dfs_path = config.load_asset("test_pathway", "sbml_dfs")
 sbml_dfs = utils.load_pickle(sbml_dfs_path)
@@ -68,7 +68,7 @@ The `cpr_graph` is really just an `igraph` `Graph` object with some specific ver
 ```{python}
 #| label: graph_to_dfs
 
-from cpr.network import net_utils
+from napistu.network import net_utils
 vertices, edges = net_utils.cpr_graph_to_pandas_dfs(cpr_graph)
 ```
 
@@ -91,7 +91,7 @@ utils.style_df(vertices.head())
 The network visualization methods in CPR are better built-out on the R side. But for quick-and-dirty network visualization we can use the standard igraph visualization functions and some plotting wrappers within CPR.
 
 ```{python}
-from cpr.network import neighborhoods
+from napistu.network import neighborhoods
 
 neighborhoods.plot_neighborhood(
     net_utils.filter_to_largest_subgraph(cpr_graph),

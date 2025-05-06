@@ -63,10 +63,10 @@ config = tutorial_utils.CprConfig("config.yaml", "downloading_pathway_data")
 
 import pandas as pd
 
-from cpr import sbml_dfs_core
-from cpr import source
-from cpr import identifiers
-from cpr import utils
+from napistu import sbml_dfs_core
+from napistu import source
+from napistu import identifiers
+from napistu import utils
 
 # setup compartments (just treat this as uncompartmentalized for now)
 compartments_df = sbml_dfs_core._stub_compartments()
@@ -234,7 +234,7 @@ Generally we will be trying to add molecular data to a network which is associat
 ```{python}
 #| label: match by ids
 
-from cpr import mechanism_matching
+from napistu import mechanism_matching
 
 # export identifiers from pathway
 species_identifiers = sbml_dfs.get_identifiers("species")
@@ -276,7 +276,7 @@ This process is controlled by the settings in the `reaction_graph_attrs` diction
 ```{python}
 #| label: create graph
 
-from cpr.network import net_create
+from napistu.network import net_create
 
 reaction_graph_attrs = {
     "reactions": {
