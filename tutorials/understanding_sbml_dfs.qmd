@@ -23,7 +23,7 @@ logger.setLevel("INFO")
 
 import os
 import pandas as pd
-from cpr import utils
+from napistu import utils
 
 import tutorial_utils
 
@@ -144,9 +144,9 @@ Here is how we can load and format the Reactome Glucose Metabolism pathway as an
 ```{python}
 #| label: sbml_dfs_from_sbml
 
-from cpr import sbml_dfs_core
-from cpr.ingestion import sbml
-from cpr import utils
+from napistu import sbml_dfs_core
+from napistu.ingestion import sbml
+from napistu import utils
 
 EXAMPLE_MODEL = "reactome_glucose_metabolism.sbml"
 test_data = tutorial_utils.locate_test_data()
@@ -186,7 +186,7 @@ While cofactors such as ATP and NADH are biologically important they can generat
 
 ```{python}
 #| label: drop_cofactors
-from cpr.modify import pathwayannot
+from napistu.modify import pathwayannot
 
 filtered_pathway = pathwayannot.drop_cofactors(sbml_dfs)
 ```
@@ -197,7 +197,7 @@ Compartments are necessary to represent many mechanisms involving transport reac
 
 ```{python}
 #| label: uncompartmentalize
-from cpr.modify import uncompartmentalize
+from napistu.modify import uncompartmentalize
 
 one_compartment_sbml_dfs = uncompartmentalize.uncompartmentalize_sbml_dfs(sbml_dfs)
 ```

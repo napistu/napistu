@@ -32,12 +32,12 @@ config = tutorial_utils.CprConfig("config.yaml", "downloading_pathway_data")
 
 import pickle
 
-from cpr import utils
-from cpr.ingestion import bigg
-from cpr.ingestion import psi_mi
-from cpr.ingestion import reactome
-from cpr.ingestion import string
-from cpr.ingestion import trrust
+from napistu import utils
+from napistu.ingestion import bigg
+from napistu.ingestion import psi_mi
+from napistu.ingestion import reactome
+from napistu.ingestion import string
+from napistu.ingestion import trrust
 
 def _log(text: str):
 

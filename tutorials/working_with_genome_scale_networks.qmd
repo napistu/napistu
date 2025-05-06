@@ -23,7 +23,7 @@ logger.setLevel("INFO")
 
 import pandas as pd
 
-from cpr import utils
+from napistu import utils
 
 import tutorial_utils
 

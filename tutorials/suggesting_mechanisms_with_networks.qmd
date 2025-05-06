@@ -35,14 +35,14 @@ tutorial_utils.load_tutorial_asset("test_pathway", config)
 #| label: env
 import pandas as pd
 
-from cpr import sbml_dfs_core
-from cpr import mechanism_matching
-from cpr import utils
+from napistu import sbml_dfs_core
+from napistu import mechanism_matching
+from napistu import utils
 
-from cpr.network import net_create
-from cpr.network import paths
-from cpr.network import neighborhoods
-from cpr.network import net_utils
+from napistu.network import net_create
+from napistu.network import paths
+from napistu.network import neighborhoods
+from napistu.network import net_utils
 
 sbml_dfs = utils.load_pickle(config.artifacts["sbml_dfs"])
 cpr_graph = utils.load_pickle(config.artifacts["cpr_graph"])
