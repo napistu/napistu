@@ -13,15 +13,13 @@ A few notebooks have a special role:
 ## Environment Setup
 
 ```bash
-# create a venv using an appropriate Python binary - /env is used because it is
-# recognized by Quarto: https://quarto.org/docs/projects/virtual-environments.html
-python -m venv env
-source env/bin/activate
-pip install --upgrade pip wheel setuptools ipykernel jupyter
+uv venv --python 3.11
+source .venv/bin/activate
+uv pip install --upgrade pip wheel setuptools ipykernel jupyter
 # install the cpr python library from lib with support for rpy2
-pip install ../lib/calicolabs-open-cpr-py[rpy2]
+uv pip install '../lib/napistu-py[rpy2]'
 # install runtime dependencies
-pip install pycairo
+uv pip install pycairo
 
-python -m ipykernel install --name open_cpr_tutorials --display-name "Open CPR - Tutorials" --user
+python -m ipykernel install --name napistu_tutorials --display-name "Napistu - Tutorials" --user
 ```

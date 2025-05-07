@@ -18,13 +18,13 @@ logger = logging.getLogger(__name__)
 
 def locate_test_data() -> str:
 
-    open_cpr_root = _find_open_cpr_root()
-    _validate_git_submodules(open_cpr_root)
+    napistu_root = _find_napistu_root()
+    _validate_git_submodules(napistu_root)
 
     test_data_path = os.path.join(
-        open_cpr_root,
+        napistu_root,
         "lib",
-        "calicolabs-open-cpr-py",
+        "napistu-py",
         "src",
         "tests",
         "test_data"
@@ -36,7 +36,7 @@ def locate_test_data() -> str:
     return test_data_path
 
 
-class CprConfig:
+class NapistuConfig:
 
     """
     Configuration file for supporting notebooks
@@ -73,7 +73,7 @@ class CprConfig:
         related_workflows: list[str] | None = None,
     ) -> None:
         """
-        Creates a CprConfig object to easily interact with a config file.
+        Creates a NapistuConfig object to easily interact with a config file.
 
         Parameters
         ----------
@@ -98,7 +98,7 @@ class CprConfig:
 
         # check whether the config is valid (and coerce it if possible)
         try:
-            config_validated = _CprConfigValidator(**config_raw).model_dump()
+            config_validated = _NapistuConfigValidator(**config_raw).model_dump()
         except ValidationError as e:
             logger.warning(e.errors())
             raise e
@@ -107,7 +107,7 @@ class CprConfig:
         self.species = config_validated["global_vars"]["species"]
         self.overwrite = config_validated["global_vars"]["overwrite"]
 
-        data_dir = config_validated["global_vars"]["data_dir"]
+        data_dir = os.path.expanduser(config_validated["global_vars"]["data_dir"])
         self.data_dir = data_dir
         self.species_data_dir = os.path.join(data_dir, re.sub(" ", "_", self.species))
 
@@ -180,7 +180,7 @@ class CprConfig:
             "in the globals sections of `config.yaml`, is currently set as {data_directory}.\n"
         )
 
-        asset_path = downloads.load_public_cpr_asset(
+        asset_path = downloads.load_public_napistu_asset(
             asset = asset,
             subasset = subasset,
             data_dir = self.data_dir,
@@ -366,23 +366,23 @@ def deploy_notebook_connect(
     return None
 
 
-def _find_open_cpr_root():
+def _find_napistu_root():
 
-    open_cpr_root, dirname = os.path.split(os.getcwd())
+    napistu_root, dirname = os.path.split(os.getcwd())
 
     if dirname != "tutorials":
-        raise ValueError(f"The working directory basename was {dirname} when it should be \"Tutorials\". To locate the example data bundled with the project you should be working in open_cpr/tutorials")
+        raise ValueError(f"The working directory basename was {dirname} when it should be \"Tutorials\". To locate the example data bundled with the project you should be working in napistu/tutorials")
 
-    return open_cpr_root
+    return napistu_root
 
-def _validate_git_submodules(open_cpr_root):
+def _validate_git_submodules(napistu_root):
 
-    lib_dir = os.path.join(open_cpr_root, "lib")
+    lib_dir = os.path.join(napistu_root, "lib")
     if not os.path.isdir(lib_dir):
-        raise FileNotFoundError (f"The \"lib\" directory was not found within your open_cpr repo ({open_cpr_root})")
+        raise FileNotFoundError (f"The \"lib\" directory was not found within your napistu repo ({napistu_root})")
 
-    EXPECTED_SUBMODULES = ["calicolabs-open-cpr-py", "rcpr"]
-    HELP_URL = "https://github.com/calico/Open-CPR/wiki/Environment-setup-cheatsheet"
+    EXPECTED_SUBMODULES = ["napistu-py", "napistu-r"]
+    HELP_URL = "https://github.com/napistu/napistu/wiki/Environment-Setup#submodules"
 
     missing_submodules = [x for x in EXPECTED_SUBMODULES if not os.path.isdir(os.path.join(lib_dir, x))]
 
@@ -392,18 +392,18 @@ def _validate_git_submodules(open_cpr_root):
     return None
 
 
-class _CprConfigValidator(BaseModel):
-    global_vars: _CprConfigGlobalValidator
-    workflows: dict[str, _CprConfigWorkflowValidator]
+class _NapistuConfigValidator(BaseModel):
+    global_vars: _NapistuConfigGlobalValidator
+    workflows: dict[str, _NapistuConfigWorkflowValidator]
 
 
-class _CprConfigGlobalValidator(BaseModel):
+class _NapistuConfigGlobalValidator(BaseModel):
     data_dir: str
     species: str
     overwrite: bool
 
 
-class _CprConfigWorkflowValidator(BaseModel):
+class _NapistuConfigWorkflowValidator(BaseModel):
     name: str
     title: str
     species_specific: bool
