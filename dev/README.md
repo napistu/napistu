@@ -33,13 +33,11 @@ Since CPR primarily aims to gather, transform, and aggregate publically-availabl
 ## Environment Setup
 
 ```bash
-# create a venv using an appropriate Python binary - /env is used because it is
-# recognized by Quarto: https://quarto.org/docs/projects/virtual-environments.html
-python -m venv env
-source env/bin/activate
+uv venv --python 3.11
+source .venv/bin/activate
 pip install --upgrade pip wheel setuptools jupyter
-# install the cpr python library from lib with support for rpy2
-pip install ../lib/calicolabs-open-cpr-py[rpy2]
+# install the napistu python library from lib with support for rpy2
+uv pip install '../lib/napistu-py[rpy2]'
 
-python -m ipykernel install --name open_cpr_dev --display-name "Open CPR - Dev" --user
+python -m ipykernel install --name napistu_dev --display-name "Napistu - Dev" --user
 ```
