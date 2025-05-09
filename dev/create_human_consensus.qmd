@@ -20,7 +20,7 @@ This document highlights how we can use the CPR command line interface (CLI) to 
 To make use of the CPR CLI we first need a python environment with the `cpr` package installed. We could do this by sourcing an environment in each bash call but instead here I just set the environment with `reticulate` so the python environment is available to all bash code cells. (I tried this with Python Quarto but Jupyter doesn't support multi-language workflows and this script is too chunky to be run as a single shell script.)
 
 ```{r python_config}
-reticulate::use_virtualenv("./env", required = TRUE)
+reticulate::use_virtualenv("./.venv", required = TRUE)
 reticulate::py_config()
 ```
 
@@ -28,20 +28,21 @@ To check configuration, we can see that my default python is the one set by reti
 
 ```{bash which_python}
 which python
+python --version
 ```
 
 ```{bash}
-# Since we are using the CPR CLI, the version of R that is detected by
+# Since we are using the Napistu CLI, the version of R that is detected by
 # Rpy2 will generally be the system version (or an alias). This version will
-# need to be configured with rcpr and its dependencies such as arrow.
+# need to be configured with napistu-r and its dependencies such as arrow.
 which R
 R --version
 ```
 
-Within this virtual env we can access the CPR CLI using `python -m cpr ...`. These CLI options are configured in calico-open-cpr-py's `main.py`.
+Within this virtual env we can access the CPR CLI using `python -m napistu ...`. These CLI options are configured in napistu-py's `main.py`.
 
 ```{bash cli_demo}
-python -m cpr --help
+python -m napistu --help
 ```
 
 Now, we can set some global parameters which should be consistent across bash cells.
@@ -52,7 +53,7 @@ yaml() {
 }
 
 # https://stackoverflow.com/questions/60569395/set-environment-variable-in-bash-in-rmarkdown
-WORKING_DIRECTORY="<<PATH_TO_CPR_DATA>>/human_consensus"
+WORKING_DIRECTORY="napistu_data/human_consensus"
 CACHE_DIRECTORY="cache"
 EXPORT_DIRECTORY="human_consensus"
 SBML_DFS_FILE="sbml_dfs.pkl"
@@ -112,7 +113,7 @@ echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
 ```{bash load_reactome}
 echo "Downloading Reactome data to $CACHE_DIR_PATH/reactome"
 source .rvars
-python -m cpr load reactome $CACHE_DIR_PATH/reactome
+python -m napistu load reactome $CACHE_DIR_PATH/reactome
 ```
 
 ```{bash integrate_reactome}
@@ -122,7 +123,7 @@ OUTPUT_URI=$CACHE_DIR_PATH/reactome/reactome.pkl
 
 echo "Integrating Reactome data from $PW_INDEX and saving results to $OUTPUT_URI"
 # use the --permissive flag because one human pathway (out of ~2500) is malformed right now
-python -m cpr integrate reactome --permissive --species "Homo sapiens" $PW_INDEX $OUTPUT_URI
+python -m napistu integrate reactome --permissive --species "Homo sapiens" $PW_INDEX $OUTPUT_URI
 ```
 
 ## TRRUST
@@ -134,9 +135,9 @@ python -m cpr integrate reactome --permissive --species "Homo sapiens" $PW_INDEX
 source .rvars
 
 echo "Downloading TF to target edges from TRRUST and creating an sbml_dfs model at $CACHE_DIR_PATH/trrust.pkl"
-python -m cpr load trrust $CACHE_DIR_PATH/trrust.tsv
+python -m napistu load trrust $CACHE_DIR_PATH/trrust.tsv
 # requires R rcpr for adding additional identifiers
-python -m cpr integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/trrust.pkl
+python -m napistu integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/trrust.pkl
 ```
 
 ## STRING
@@ -151,12 +152,12 @@ python -m cpr integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/trrust
 source .rvars
 
 echo "Downloading results from STRING and HPA and integrating them to create a STRING sbml_dfs model at $CACHE_DIR_PATH/hpa_filtered_string.pkl"
-python -m cpr load string-db --species "Homo sapiens" $CACHE_DIR_PATH/string_db
-python -m cpr load string-aliases --species "Homo sapiens" $CACHE_DIR_PATH/string_aliases
-python -m cpr integrate string-db -o $CACHE_DIR_PATH/string_db $CACHE_DIR_PATH/string_aliases $CACHE_DIR_PATH/string.pkl
-python -m cpr load proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell
+python -m napistu load string-db --species "Homo sapiens" $CACHE_DIR_PATH/string_db
+python -m napistu load string-aliases --species "Homo sapiens" $CACHE_DIR_PATH/string_aliases
+python -m napistu integrate string-db -o $CACHE_DIR_PATH/string_db $CACHE_DIR_PATH/string_aliases $CACHE_DIR_PATH/string.pkl
+python -m napistu load proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell
 # requires R rcpr for filtering based on shared compartments
-python -m cpr refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_DIR_PATH/hpa_subcell $CACHE_DIR_PATH/hpa_filtered_string.pkl
+python -m napistu refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_DIR_PATH/hpa_subcell $CACHE_DIR_PATH/hpa_filtered_string.pkl
 ```
 
 ## Metabolic model - recon3D
@@ -169,10 +170,10 @@ python -m cpr refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_D
 source .rvars
 
 echo "Downloading BiGG metabolic models and formatting the human model (Recon3D) as an sbml_dfs model at $CACHE_DIR_PATH/bigg_w_ids.pkl"
-python -m cpr load bigg $CACHE_DIR_PATH/bigg
-python -m cpr integrate bigg --species "Homo sapiens" $CACHE_DIR_PATH/bigg/pw_index.tsv $CACHE_DIR_PATH/bigg.pkl
+python -m napistu load bigg $CACHE_DIR_PATH/bigg
+python -m napistu integrate bigg --species "Homo sapiens" $CACHE_DIR_PATH/bigg/pw_index.tsv $CACHE_DIR_PATH/bigg.pkl
 # requires R rcpr for updating identifiers
-python -m cpr refine expand_identifiers --species "Homo sapiens" --ontologies "ensembl_gene" $CACHE_DIR_PATH/bigg.pkl $CACHE_DIR_PATH/bigg_w_ids.pkl
+python -m napistu refine expand_identifiers --species "Homo sapiens" --ontologies "ensembl_gene" $CACHE_DIR_PATH/bigg.pkl $CACHE_DIR_PATH/bigg_w_ids.pkl
 ```
 
 ## Dogmatic Scaffold
@@ -183,7 +184,7 @@ This model just contains proteins (with BQB_IS annotations) and their associated
 source .rvars
 
 echo "Creating a dogmatic scaffold sbml_dfs model and saving results to $CACHE_DIR_PATH/dogma_sbml_dfs.pkl"
-python -m cpr integrate dogmatic_scaffold --species "Homo sapiens" $CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+python -m napistu integrate dogmatic_scaffold --species "Homo sapiens" $CACHE_DIR_PATH/dogma_sbml_dfs.pkl
 ```
 
 # Unify compartmentalization
@@ -194,9 +195,9 @@ python -m cpr integrate dogmatic_scaffold --species "Homo sapiens" $CACHE_DIR_PA
 source .rvars
 
 echo "Uncompartmentalizing all compartmentalized models"
-python -m cpr refine merge_model_compartments $CACHE_DIR_PATH/reactome/reactome.pkl $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
-python -m cpr refine merge_model_compartments $CACHE_DIR_PATH/trrust.pkl $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
-python -m cpr refine merge_model_compartments $CACHE_DIR_PATH/bigg_w_ids.pkl $CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
+python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/reactome/reactome.pkl $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
+python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/trrust.pkl $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
+python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/bigg_w_ids.pkl $CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
 ```
 
 # Consensus
@@ -211,7 +212,7 @@ dogma_input=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl
 output_uri=$CACHE_DIR_PATH/consensus.pkl
 
 echo "Building a multisource network from: Reactome ($reactome_input), STRING ($string_input), TRRUST ($trrust_input), BiGG ($bigg_input), and Dogma ($dogma_input) and saving results to $output_uri"
-python -m cpr consensus create --nondogmatic $reactome_input $string_input $trrust_input $bigg_input $dogma_input $output_uri
+python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $bigg_input $dogma_input $output_uri
 ```
 
 # Add Reactome metadata
@@ -221,22 +222,30 @@ python -m cpr consensus create --nondogmatic $reactome_input $string_input $trru
 ```{bash add_reactome_entity_sets}
 source .rvars
 # globals
-ENTITY_SET_CSV=/group/cpr/open_cpr_tmp_files/external_pathways_reactome_neo4j_members.csv
+
+ENTITY_SET_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_members.csv
+REMOTE_URL="https://storage.googleapis.com/calico-cpr-public/external_pathways/external_pathways_reactome_neo4j_members.csv"
 
 input_uri=$CACHE_DIR_PATH/consensus.pkl
-entity_set_path=$REACTOME_FLAT_DIR/$ENTITY_SET_CSV
 output_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
 
+if [ -f "$ENTITY_SET_PATH" ]; then
+  echo "File already exists at: $ENTITY_SET_PATH"
+  echo "Skipping download."
+else
+  echo "File not found. Downloading from Google Cloud Storage..."
+  wget -O "$ENTITY_SET_PATH" "$REMOTE_URL"
+fi
 
-if [[ -f $input_uri ]] && [[ -f $entity_set_path ]]; then
-    echo "Adding qualitative grouping of species (Reactome entity sets) $input_uri from the entity sets file at $entity_set_path and saving results to $output_uri"
-    python -m cpr refine add_reactome_entity_sets $input_uri $entity_set_path $output_uri
+if [[ -f $input_uri ]] && [[ -f $ENTITY_SET_PATH ]]; then
+    echo "Adding qualitative grouping of species (Reactome entity sets) $input_uri from the entity sets file at $ENTITY_SET_PATH and saving results to $output_uri"
+    python -m napistu refine add_reactome_entity_sets $input_uri $ENTITY_SET_PATH $output_uri
 else
     if [[ -f $input_uri ]]; then
         echo "Missing Model at $input_uri"
     fi
-    if [[ -f $entity_set_path ]]; then
-        echo "Missing entity sets at $entity_set_path"
+    if [[ -f $ENTITY_SET_PATH ]]; then
+        echo "Missing entity sets at $ENTITY_SET_PATH"
     fi
 fi
 ```
@@ -246,21 +255,29 @@ fi
 ```{bash add_reactome_xrefs}
 source .rvars
 # globals
-CROSSREF_CSV=/group/cpr/open_cpr_tmp_files/external_pathways_reactome_neo4j_crossref.csv
+CROSSREF_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_crossref.csv
+REMOTE_URL="https://storage.googleapis.com/calico-cpr-public/external_pathways/external_pathways_reactome_neo4j_crossref.csv"
 
 input_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
-xref_set_path=$REACTOME_FLAT_DIR/$CROSSREF_CSV
 output_uri=$CACHE_DIR_PATH/consensus_w_xrefs.pkl
 
-if [[ -f $input_uri ]] && [[ -f $xref_set_path ]]; then
-    echo "Adding additional identifiers to $input_uri from the Reactome cross-ref file at $xref_set_path and saving results to $output_uri"
-    python -m cpr refine add_reactome_identifiers $input_uri $xref_set_path $output_uri
+if [ -f "$CROSSREF_PATH" ]; then
+  echo "File already exists at: $CROSSREF_PATH"
+  echo "Skipping download."
+else
+  echo "File not found. Downloading from Google Cloud Storage..."
+  wget -O "$CROSSREF_PATH" "$REMOTE_URL"
+fi
+
+if [[ -f $input_uri ]] && [[ -f $CROSSREF_PATH ]]; then
+    echo "Adding additional identifiers to $input_uri from the Reactome cross-ref file at $CROSSREF_PATH and saving results to $output_uri"
+    python -m napistu refine add_reactome_identifiers $input_uri $CROSSREF_PATH $output_uri
 else
     if [[ -f $input_uri ]]; then
         echo "Missing Model at $input_uri"
     fi
-    if [[ -f $xref_set_path ]]; then
-        echo "Missing Xrefs at $xref_set_path"
+    if [[ -f $CROSSREF_PATH ]]; then
+        echo "Missing Xrefs at $CROSSREF_PATH"
     fi
 fi
 ```
@@ -274,7 +291,7 @@ output_uri=$SBML_DFS_OUT_PATH
 
 if [[ -f $input_uri ]] ; then
     echo "Dropping cofactors from $input_uri and saving results to $output_uri"
-    python -m cpr refine drop_cofactors $input_uri $output_uri
+    python -m napistu refine drop_cofactors $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
@@ -291,7 +308,7 @@ output_uri=$REGULATORY_GRAPH_OUT_PATH
 
 if [[ -f $input_uri ]] ; then
     echo "Generating a regulatory graph from $input_uri and saving results to $output_uri"
-    python -m cpr exporter export_igraph -a graph_attrs_spec.yaml -g regulatory -w mixed $input_uri $output_uri
+    python -m napistu exporter export_igraph -a graph_attrs_spec.yaml -g regulatory -w mixed $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
@@ -306,7 +323,7 @@ output_uri=$REGULATORY_DISTANCES_OUT_PATH
 
 if [[ -f $input_uri ]] ; then
     echo "Calculating pre-computed distances from $input_uri and saving results to $output_uri"
-    python -m cpr exporter export_precomputed_distances -s 5 $input_uri $output_uri
+    python -m napistu exporter export_precomputed_distances -s 5 $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
@@ -319,7 +336,7 @@ source .rvars
 input_uri=$SBML_DFS_OUT_PATH
 output_uri=$SBML_DFS_TABLES_OUT_PATH
 
-python -m cpr exporter export_smbl_dfs_tables --nondogmatic $input_uri $output_uri
+python -m napistu exporter export_smbl_dfs_tables --nondogmatic $input_uri $output_uri
 ```
 
 ## Relocate sbml_dfs tables
@@ -360,8 +377,8 @@ tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH .
 
 ```{bash}
 source .rvars
-gcloud config set project <<PUBLIC_GCS_BUCKET>>
-gsutil cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://<<PUBLIC_GCS_BUCKET>>/human_consensus.tar.gz
-gsutil cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://<<PUBLIC_GCS_BUCKET>>/human_consensus_w_distances.tar.gz
+gcloud config set project shackett-napistu-public
+gsutil cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://shackett-napistu-public/human_consensus.tar.gz
+# gsutil cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
 ```
 

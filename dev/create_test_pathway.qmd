@@ -25,7 +25,7 @@ reticulate::use_virtualenv("./.venv", required = TRUE)
 reticulate::py_config()
 ```
 
-```{bash check_version}
+```{bash which_python}
 which python
 python --version
 ```
