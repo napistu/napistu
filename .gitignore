@@ -14,3 +14,6 @@ tutorials/*.html
 
 # data
 napistu_data/
+
+# user files
+.vscode

@@ -159,7 +159,8 @@ class NapistuConfig:
     def load_asset(
         self,
         asset: str,
-        subasset: str | None = None
+        subasset: str | None = None,
+        overwrite: bool = False
         ) -> str:
 
         """
@@ -184,7 +185,8 @@ class NapistuConfig:
             asset = asset,
             subasset = subasset,
             data_dir = self.data_dir,
-            init_msg = tutorial_init_msg
+            init_msg = tutorial_init_msg,
+            overwrite = overwrite
         )
         
         return asset_path
