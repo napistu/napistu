@@ -67,7 +67,7 @@
 ## Git Practices
 - Commit messages: follow conventional commits format
 - PR descriptions: include issue reference, summary of changes, testing notes
-- Branch naming: `feature/`, `bugfix/`, `refactor/` prefixes followed by issue number
+- Branch naming: `issue-` prefix followed by issue number. If this branch already exists then create a new branch with a -2, -3, ... suffix 
 
 ## Project-Specific Patterns
 
