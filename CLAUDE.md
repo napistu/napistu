@@ -15,46 +15,11 @@ The repository consists of three main components:
 
 ### Python Library
 
-```bash
-# Create and activate virtual environment
-uv venv --python 3.11
-source .venv/bin/activate
-
-# Install the Python package with development dependencies
-cd lib/napistu-py
-uv pip install -e ".[dev]"
-
-# To include rpy2 support
-uv pip install -e ".[dev,rpy2]"
-```
+To modify napistu-py work off of and create issues and PRs directly on napistu/napistu-py.
 
 ### R Package
 
-```bash
-# Install from local source in R
-R CMD build lib/napistu-r
-R CMD INSTALL rcpr_*.tar.gz
-
-# Or install in an interactive R session
-R
-> remotes::install_local("lib/napistu-r")
-```
-
-### Tutorials Environment
-
-```bash
-# Create and activate virtual environment
-uv venv --python 3.11
-source .venv/bin/activate
-
-# Install dependencies
-uv pip install --upgrade pip wheel setuptools ipykernel jupyter
-uv pip install './lib/napistu-py[rpy2]'
-uv pip install pycairo seaborn
-
-# Set up Jupyter kernel
-python -m ipykernel install --name napistu_tutorials --display-name "Napistu - Tutorials" --user
-```
+To modify napistu-r work off of and create issues and PRs directly on napistu/napistu-r.
 
 ## Common Commands
 
@@ -127,18 +92,10 @@ R -e "devtools::document()"
 
 When contributing to Napistu:
 1. Create a branch with the format `issue-{number}` from the main branch
-2. Make your changes following the code conventions in `conventions.md`
-3. Run tests to ensure they pass before submitting a PR
+2. Make your changes on this branch following the code conventions in `conventions.md`
+3. Run tests using the to ensure they pass before submitting a PR
 4. Create a pull request against the main branch
 
-For automated issue fixes with Claude Code:
-```bash
-# Make sure you've authenticated with GitHub
-gh auth login
-
-# Run Claude Code to create a fix and PR
-./utils/claude-pr.sh --main-repo=napistu/napistu --submodule=napistu-py --issue=42 --reviewer=username
-```
 
 ## Code Conventions
 
