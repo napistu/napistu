@@ -45,3 +45,16 @@ We'll include examples here of how Napistu is used in the wild to address biolog
 
 - For bug and issue tracking we use [Github Issues](https://github.com/napistu/napistu/issues).
 - Napistu's core algorithms and data structures are documented on the [Napistu Wiki](https://github.com/napistu/napistu/wiki).
+
+# Contributing to Napistu
+
+- See `conventions.md` for an overview of Napistu's code conventions.
+- Github Actions is used to test the individual R and Python repositories. Ensure that tests pass before contributing a pull request.
+- Claude Code is used to propose fixes for straight forward issues. It is currently manually triggered:
+
+```bash
+# TO DO - add environment setup directions
+gh auth login
+./utils/claude-pr.sh 
+```
+
