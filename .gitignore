@@ -11,3 +11,9 @@ __pycache__
 
 dev/dev.Rproj
 tutorials/*.html
+
+# data
+napistu_data/
+
+# user files
+.vscode

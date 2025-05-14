@@ -1,5 +1,5 @@
 global_vars:
-    data_dir: "<<PATH_TO_DATA_DIR>>"
+    data_dir: "napistu_data" # set your path here
     species: "Homo sapiens" # don't modify
     overwrite: False
 
