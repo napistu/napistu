@@ -102,6 +102,5 @@
 - Use checkthat to validate R arguments
 
 ### Logging
-
 - use logger for Python reporting
 - use cli for R reporting
