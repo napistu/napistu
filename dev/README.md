@@ -41,3 +41,18 @@ uv pip install '../lib/napistu-py[rpy2]'
 
 python -m ipykernel install --name napistu_dev --display-name "Napistu - Dev" --user
 ```
+
+## MCP Testing
+
+- `napistu_mcp_inspector.py` runs a local MCP server. It can be run using:
+
+```bash
+python napistu_mcp_inspector.py
+```
+
+- To understand the contents of the MCP server we can look at it with:
+
+```bash
+# uv pip install "mcp[cli]"
+mcp dev napistu_mcp_inspector.py
+```
