@@ -1,0 +1,16 @@
+---
+description: Github issues -> new branch and edits
+globs: 
+alwaysApply: false
+---
+When addressing a Github Issue:
+
+1. Read the issue from relevant Napistu Github repository (they are all public). For example, fetching an issue 33 from napistu-py would involve reading the following url: https://github.com/napistu/napistu-py/issues/33. Directly follow URLs rather than using web searches.
+2. Create a branch in the correct local repository
+    - Name it issue-X-auto where X is the issue number. If this branch already exists then create a new branch with issue-X-auto-1, -2, etc.
+    - This project uses git submodules so make sure that you are creating a branch within a submodule (e.g., napistu-py, napistu-r, napistu-scrapyard) unless the issue is from the napistu/napistu repository.
+    - Unless otherwise instructed checkout main first and pull in remote changes.
+3. For straightforward issues directly address them with code changes following the conventions in conventions.md. Create appropriate positive and negative tests. Run pytest for python code and R CMD check for R packages.
+4. For more complex changes propose a strategy and ask for input when needed.
+5. Iterate with the user until the relevant function is complete.
+6. Propose a pull request which will close the relevant issue and tag shackett as a reviewer.
