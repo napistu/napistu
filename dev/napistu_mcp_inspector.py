@@ -1,51 +1,31 @@
-from mcp.server import FastMCP
+# Install the package in development mode if needed
+# !pip install -e '.[mcp]'
+
 import asyncio
 import os
+import sys
+import logging
+from pathlib import Path
+import json
 
-# Create a simple server for the inspector
-server = FastMCP("napistu-inspector")
+# Import the MCP components
+from napistu.mcp.profiles import get_profile
+from napistu.mcp.server import create_server, start_server
+from napistu.mcp.components import documentation, codebase, tutorials, execution
 
-# Global data storage
-_docs_cache = {
-    "readme": {
-        "README.md": "# Napistu\n\nThis is a sample README for testing with the MCP Inspector."
-    }
-}
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("napistu")
 
-# Register a resource
-@server.resource("napistu://documentation/summary")
-async def get_documentation_summary():
-    """Get a summary of available documentation."""
-    return {
-        "readme_files": list(_docs_cache["readme"].keys())
-    }
+# Create a dummy session context for execution components
+session_context = {}
+object_registry = {}
 
-@server.resource("napistu://documentation/readme/{file_name}")
-async def get_readme_content(file_name: str):
-    """Get the content of a README file."""
-    if file_name not in _docs_cache["readme"]:
-        return {"error": f"README file {file_name} not found"}
-    
-    return {
-        "content": _docs_cache["readme"][file_name],
-        "format": "markdown"
-    }
+# define the types of assets to load
+profile = get_profile("full")
 
-# Register a tool
-@server.tool("search_documentation")
-async def search_documentation(query: str):
-    """Search documentation for a query."""
-    results = {"readme": []}
-    
-    for name, content in _docs_cache["readme"].items():
-        if query.lower() in content.lower():
-            results["readme"].append({
-                "name": name,
-                "snippet": content[:100] + "..." if len(content) > 100 else content
-            })
-    
-    return results
+mcp = create_server(profile)
 
 # This is needed for the MCP Inspector to work
 if __name__ == "__main__":
-    asyncio.run(server.run())
+    mcp.run()
