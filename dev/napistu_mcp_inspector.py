@@ -9,9 +9,10 @@ from pathlib import Path
 import json
 
 # Import the MCP components
+from napistu.mcp import codebase, documentation, execution
 from napistu.mcp.profiles import get_profile
 from napistu.mcp.server import create_server, start_server
-from napistu.mcp.components import documentation, codebase, tutorials, execution
+from napistu.mcp import tutorials
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
