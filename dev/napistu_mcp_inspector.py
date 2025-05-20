@@ -9,10 +9,8 @@ from pathlib import Path
 import json
 
 # Import the MCP components
-from napistu.mcp import codebase, documentation, execution
 from napistu.mcp.profiles import get_profile
 from napistu.mcp.server import create_server, start_server
-from napistu.mcp import tutorials
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -29,4 +27,4 @@ mcp = create_server(profile)
 
 # This is needed for the MCP Inspector to work
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(start_server(mcp))
