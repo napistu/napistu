@@ -44,13 +44,17 @@ python -m ipykernel install --name napistu_dev --display-name "Napistu - Dev" --
 
 ## MCP Testing
 
-- `napistu_mcp_inspector.py` runs a local MCP server. It can be run using:
+Napistu has an Model Context Protocol (MCP) server which allows AI tools to easily comb through its documentation, codebase, and call key functions. For more details see the [Napistu Wiki](https://github.com/napistu/napistu/wiki/Model-Context-Protocol-(MCP)-server).
+
+To debug, the server you can create a local server and then inspect and alter its constants using the mcp CLI. To  do this:
+
+`napistu_mcp_inspector.py` runs a local MCP server:
 
 ```bash
 python napistu_mcp_inspector.py
 ```
 
-- To understand the contents of the MCP server we can look at it with:
+To understand the contents of the MCP server we can look at it with:
 
 ```bash
 # uv pip install "mcp[cli]"
