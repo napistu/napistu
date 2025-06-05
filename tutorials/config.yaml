@@ -37,9 +37,9 @@ workflows:
         connect_id: 
         artifacts:
 
-    formatting_sbml_dfs_as_cpr_graphs:
-        name: "formatting_sbml_dfs_as_cpr_graphs.qmd"
-        title: "CPR: Formatting sbml_dfs as cpr_graphs"
+    formatting_sbml_dfs_as_napistu_graphs:
+        name: "formatting_sbml_dfs_as_napistu_graphs.qmd"
+        title: "CPR: Formatting sbml_dfs as napistu_graphs"
         species_specific: False
         connect_id: 
         artifacts:
@@ -52,7 +52,7 @@ workflows:
         connect_id: 
         artifacts:
             sbml_dfs: "test_pathway/sbml_dfs.pkl"
-            cpr_graph: "test_pathway/regulatory_graph.pkl"
+            napistu_graph: "test_pathway/regulatory_graph.pkl"
 
     working_with_genome_scale_pathways:
         name: "working_with_genome_scale_pathways.qmd"

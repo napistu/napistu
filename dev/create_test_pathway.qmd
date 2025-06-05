@@ -161,5 +161,5 @@ tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH .
 ```{bash gcs_upload}
 source .rvars_testpw
 gcloud config set project shackett-napistu-public
-gsutil cp $CACHE_DIR_PATH/test_pathway.tar.gz gs://shackett-napistu-public/test_pathway.tar.gz
+gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/test_pathway.tar.gz gs://shackett-napistu-public/test_pathway.tar.gz
 ```

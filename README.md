@@ -32,7 +32,7 @@ These tutorials are intended as stand-alone demonstrations of Napistu's core fun
 - Understanding the `sbml_dfs` format
 - Merging networks with the `consensus` module
 - Using the CPR Command Line Interface (CLI)
-- Formatting `sbml_dfs` as `cpr_graph` networks
+- Formatting `sbml_dfs` as `napistu_graph` networks
 - Suggesting mechanisms with network approaches
 - Adding molecule- and reaction-level information to graphs
 - R-based network visualization
