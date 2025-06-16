@@ -15,16 +15,16 @@ format:
 
 ## Intro
 
-This document highlights how we can use the CPR command line interface (CLI) to build pathway representations. We'll do this with a bunch of `bash` calls run through a quarto document. The CPR CLI is defined in the [__main__.py](https://github.com/calico/calicolabs-open-cpr-py/blob/main/src/cpr/__main__.py) file of calicolabs-open-cpr-py. Most of the commands are light-weight wrappers around CPR functions which exist to facilitate the creation of Dockerized pipelines. Here, we'll skip Dockerization and instead use a local python environment to run the CLI.
+This document highlights how we can use the Napistu command line interface (CLI) to build pathway representations. We'll do this with a bunch of `bash` calls run through a quarto document. The Napistu CLI is defined in the [__main__.py](https://github.com/napistu/napistu-py/blob/main/src/napistu/__main__.py) file of napistu-py. Most of the commands are light-weight wrappers around Napistu functions which exist to facilitate the creation of Dockerized pipelines. Here, we'll skip Dockerization and instead use a local python environment to run the CLI.
 
-To make use of the CPR CLI we first need a python environment with the `cpr` package installed. We could do this by sourcing an environment in each bash call but instead here I just set the environment with `reticulate` so the python environment is available to all bash code cells. (I tried this with Python Quarto but Jupyter doesn't support multi-language workflows and this script is too chunky to be run as a single shell script.)
+To make use of the Napistu CLI we first need a python environment with the `napistu` package installed. We could do this by sourcing an environment in each bash call but instead here I just set the environment with `reticulate` so the python environment is available to all bash code cells. (I tried this with Python Quarto but Jupyter doesn't support multi-language workflows and this script is too chunky to be run as a single shell script.)
 
 ```{r python_config}
 reticulate::use_virtualenv("./.venv", required = TRUE)
 reticulate::py_config()
 ```
 
-To check configuration, we can see that my default python is the one set by reticulate:
+To check configuration, we can see that my default python is the one set by `reticulate`:
 
 ```{bash which_python}
 which python
@@ -136,7 +136,7 @@ source .rvars
 
 echo "Downloading TF to target edges from TRRUST and creating an sbml_dfs model at $CACHE_DIR_PATH/trrust.pkl"
 python -m napistu load trrust $CACHE_DIR_PATH/trrust.tsv
-# requires R rcpr for adding additional identifiers
+# requires R napistu-r for adding additional identifiers
 python -m napistu integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/trrust.pkl
 ```
 
@@ -155,9 +155,8 @@ echo "Downloading results from STRING and HPA and integrating them to create a S
 python -m napistu load string-db --species "Homo sapiens" $CACHE_DIR_PATH/string_db
 python -m napistu load string-aliases --species "Homo sapiens" $CACHE_DIR_PATH/string_aliases
 python -m napistu integrate string-db -o $CACHE_DIR_PATH/string_db $CACHE_DIR_PATH/string_aliases $CACHE_DIR_PATH/string.pkl
-python -m napistu load proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell
-# requires R rcpr for filtering based on shared compartments
-python -m napistu refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_DIR_PATH/hpa_subcell $CACHE_DIR_PATH/hpa_filtered_string.pkl
+python -m napistu load proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell.tsv
+python -m napistu refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_DIR_PATH/hpa_subcell.tsv $CACHE_DIR_PATH/hpa_filtered_string.pkl
 ```
 
 ## Metabolic model - recon3D
@@ -172,8 +171,7 @@ source .rvars
 echo "Downloading BiGG metabolic models and formatting the human model (Recon3D) as an sbml_dfs model at $CACHE_DIR_PATH/bigg_w_ids.pkl"
 python -m napistu load bigg $CACHE_DIR_PATH/bigg
 python -m napistu integrate bigg --species "Homo sapiens" $CACHE_DIR_PATH/bigg/pw_index.tsv $CACHE_DIR_PATH/bigg.pkl
-# requires R rcpr for updating identifiers
-python -m napistu refine expand_identifiers --species "Homo sapiens" --ontologies "ensembl_gene" $CACHE_DIR_PATH/bigg.pkl $CACHE_DIR_PATH/bigg_w_ids.pkl
+python -m napistu refine expand_identifiers --species "Homo sapiens" --ontologies "ensembl_gene" --preferred_method "bioconductor" $CACHE_DIR_PATH/bigg.pkl $CACHE_DIR_PATH/bigg_w_ids.pkl
 ```
 
 ## Dogmatic Scaffold
@@ -212,7 +210,7 @@ dogma_input=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl
 output_uri=$CACHE_DIR_PATH/consensus.pkl
 
 echo "Building a multisource network from: Reactome ($reactome_input), STRING ($string_input), TRRUST ($trrust_input), BiGG ($bigg_input), and Dogma ($dogma_input) and saving results to $output_uri"
-python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $bigg_input $dogma_input $output_uri
+python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $dogma_input $output_uri $bigg_input
 ```
 
 # Add Reactome metadata
@@ -222,9 +220,8 @@ python -m napistu consensus create --nondogmatic $reactome_input $string_input $
 ```{bash add_reactome_entity_sets}
 source .rvars
 # globals
-
-ENTITY_SET_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_members.csv
 REMOTE_URL="https://storage.googleapis.com/calico-cpr-public/external_pathways/external_pathways_reactome_neo4j_members.csv"
+ENTITY_SET_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_members.csv
 
 input_uri=$CACHE_DIR_PATH/consensus.pkl
 output_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
@@ -255,8 +252,8 @@ fi
 ```{bash add_reactome_xrefs}
 source .rvars
 # globals
-CROSSREF_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_crossref.csv
 REMOTE_URL="https://storage.googleapis.com/calico-cpr-public/external_pathways/external_pathways_reactome_neo4j_crossref.csv"
+CROSSREF_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_crossref.csv
 
 input_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
 output_uri=$CACHE_DIR_PATH/consensus_w_xrefs.pkl
@@ -323,7 +320,7 @@ output_uri=$REGULATORY_DISTANCES_OUT_PATH
 
 if [[ -f $input_uri ]] ; then
     echo "Calculating pre-computed distances from $input_uri and saving results to $output_uri"
-    python -m napistu exporter export_precomputed_distances -s 5 $input_uri $output_uri
+    python -m napistu exporter export_precomputed_distances -s 3 -q 0.1 -w "['weights', 'upstream_weights']" $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
@@ -350,17 +347,11 @@ cp $SBML_DFS_TABLES_OUT_PATH/species_identifiers.tsv $IDENTIFIERS_OUT_PATH
 
 ```{bash}
 source .rvars
-
 tar_gz_uri="$CACHE_DIR_PATH/human_consensus.tar.gz"
 distances_filename=$(basename "$REGULATORY_DISTANCES_OUT_PATH")
-# Get a list of all files in the directory, excluding the distances file,
-# and outputting relative paths
-include_files=$(find "$EXPORT_DIR_PATH" -maxdepth 1 -not -name "$distances_filename" -printf "%P\0" | tr '\0' ' ')
 
 echo "Taring and g-zipping the $EXPORT_DIR_PATH (excluding $distances_filename) as $tar_gz_uri"
-echo "Include Files: '$include_files'" # Debugging - make sure this looks correct
-
-tar -czvf "$tar_gz_uri" -C "$EXPORT_DIR_PATH" $include_files
+tar -czvf "$tar_gz_uri" -C "$EXPORT_DIR_PATH" --exclude="$distances_filename" .
 ```
 
 ### With precomputed distances
@@ -379,6 +370,6 @@ tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH .
 source .rvars
 gcloud config set project shackett-napistu-public
 gsutil cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://shackett-napistu-public/human_consensus.tar.gz
-# gsutil cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
+gsutil cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
 ```
 
