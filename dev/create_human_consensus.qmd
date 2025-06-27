@@ -58,9 +58,9 @@ CACHE_DIRECTORY="cache"
 EXPORT_DIRECTORY="human_consensus"
 SBML_DFS_FILE="sbml_dfs.pkl"
 SBML_DFS_TABLES_DIR="sbml_dfs_tables"
-REGULATORY_GRAPH_FILE="regulatory_graph.pkl"
-REGULATORY_DISTANCES_FILE="regulatory_distances.json"
-IDENTIFIERS_FILE="identifiers.tsv"
+REGULATORY_GRAPH_FILE="napistu_graph.pkl"
+REGULATORY_DISTANCES_FILE="precomputed_distances.parquet"
+IDENTIFIERS_FILE="species_identifiers.tsv"
 
 # create paths
 CACHE_DIR_PATH=$WORKING_DIRECTORY/$CACHE_DIRECTORY
@@ -113,7 +113,7 @@ echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
 ```{bash load_reactome}
 echo "Downloading Reactome data to $CACHE_DIR_PATH/reactome"
 source .rvars
-python -m napistu load reactome $CACHE_DIR_PATH/reactome
+python -m napistu ingestion reactome $CACHE_DIR_PATH/reactome
 ```
 
 ```{bash integrate_reactome}
@@ -135,8 +135,8 @@ python -m napistu integrate reactome --permissive --species "Homo sapiens" $PW_I
 source .rvars
 
 echo "Downloading TF to target edges from TRRUST and creating an sbml_dfs model at $CACHE_DIR_PATH/trrust.pkl"
-python -m napistu load trrust $CACHE_DIR_PATH/trrust.tsv
-# requires R napistu-r for adding additional identifiers
+python -m napistu ingestion trrust $CACHE_DIR_PATH/trrust.tsv
+# requires R napistu-r for adding additional identifiers (we could update this to use the Python appraoch but TRRUST functionality will probably be removed once omnipath ingestion is set up so not really worthwhile)
 python -m napistu integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/trrust.pkl
 ```
 
@@ -152,10 +152,10 @@ python -m napistu integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/tr
 source .rvars
 
 echo "Downloading results from STRING and HPA and integrating them to create a STRING sbml_dfs model at $CACHE_DIR_PATH/hpa_filtered_string.pkl"
-python -m napistu load string-db --species "Homo sapiens" $CACHE_DIR_PATH/string_db
-python -m napistu load string-aliases --species "Homo sapiens" $CACHE_DIR_PATH/string_aliases
+python -m napistu ingestion string-db --species "Homo sapiens" $CACHE_DIR_PATH/string_db
+python -m napistu ingestion string-aliases --species "Homo sapiens" $CACHE_DIR_PATH/string_aliases
 python -m napistu integrate string-db -o $CACHE_DIR_PATH/string_db $CACHE_DIR_PATH/string_aliases $CACHE_DIR_PATH/string.pkl
-python -m napistu load proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell.tsv
+python -m napistu ingestion proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell.tsv
 python -m napistu refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_DIR_PATH/hpa_subcell.tsv $CACHE_DIR_PATH/hpa_filtered_string.pkl
 ```
 
@@ -169,7 +169,7 @@ python -m napistu refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CAC
 source .rvars
 
 echo "Downloading BiGG metabolic models and formatting the human model (Recon3D) as an sbml_dfs model at $CACHE_DIR_PATH/bigg_w_ids.pkl"
-python -m napistu load bigg $CACHE_DIR_PATH/bigg
+python -m napistu ingestion bigg $CACHE_DIR_PATH/bigg
 python -m napistu integrate bigg --species "Homo sapiens" $CACHE_DIR_PATH/bigg/pw_index.tsv $CACHE_DIR_PATH/bigg.pkl
 python -m napistu refine expand_identifiers --species "Homo sapiens" --ontologies "ensembl_gene" --preferred_method "bioconductor" $CACHE_DIR_PATH/bigg.pkl $CACHE_DIR_PATH/bigg_w_ids.pkl
 ```
@@ -193,12 +193,22 @@ python -m napistu integrate dogmatic_scaffold --species "Homo sapiens" $CACHE_DI
 source .rvars
 
 echo "Uncompartmentalizing all compartmentalized models"
-python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/reactome/reactome.pkl $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
-python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/trrust.pkl $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
+#python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/reactome/reactome.pkl $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
+#python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/trrust.pkl $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
 python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/bigg_w_ids.pkl $CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
 ```
 
 # Consensus
+
+```{bash validate_sbml_dfs}
+source .rvars
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/hpa_filtered_string.pkl
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+```
+
 
 ```{bash consensus}
 source .rvars
@@ -210,7 +220,7 @@ dogma_input=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl
 output_uri=$CACHE_DIR_PATH/consensus.pkl
 
 echo "Building a multisource network from: Reactome ($reactome_input), STRING ($string_input), TRRUST ($trrust_input), BiGG ($bigg_input), and Dogma ($dogma_input) and saving results to $output_uri"
-python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $dogma_input $output_uri $bigg_input
+python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $dogma_input $bigg_input $output_uri
 ```
 
 # Add Reactome metadata
@@ -294,9 +304,9 @@ else
 fi
 ```
 
-# Export igraph representation and other results
+# Export NapistuGraph/igraph representation and other results
 
-## igraph
+## NapistuGraph/igraph
 
 ```{bash export_igraph}
 source .rvars
@@ -319,8 +329,9 @@ input_uri=$REGULATORY_GRAPH_OUT_PATH
 output_uri=$REGULATORY_DISTANCES_OUT_PATH
 
 if [[ -f $input_uri ]] ; then
-    echo "Calculating pre-computed distances from $input_uri and saving results to $output_uri"
-    python -m napistu exporter export_precomputed_distances -s 3 -q 0.1 -w "['weights', 'upstream_weights']" $input_uri $output_uri
+    echo "Calculating precomputed distances from $input_uri and saving results to $output_uri"
+    # when including dense sources like STRING making s > 3 is likely to run into OOM
+    python -m napistu exporter export_precomputed_distances -s 3 -q 0.2 -w "['weights', 'upstream_weights']" $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
@@ -369,7 +380,7 @@ tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH .
 ```{bash}
 source .rvars
 gcloud config set project shackett-napistu-public
-gsutil cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://shackett-napistu-public/human_consensus.tar.gz
-gsutil cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
+gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://shackett-napistu-public/human_consensus.tar.gz
+gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
 ```
 

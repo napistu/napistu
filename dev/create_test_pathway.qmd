@@ -41,9 +41,9 @@ CACHE_DIRECTORY="cache"
 EXPORT_DIRECTORY="test_pathway"
 SBML_DFS_FILE="sbml_dfs.pkl"
 SBML_DFS_TABLES_DIR="sbml_dfs_tables"
-REGULATORY_GRAPH_FILE="regulatory_graph.pkl"
-REGULATORY_DISTANCES_FILE="regulatory_distances.json"
-IDENTIFIERS_FILE="identifiers.tsv"
+REGULATORY_GRAPH_FILE="napistu_graph.pkl"
+REGULATORY_DISTANCES_FILE="precomputed_distances.parquet"
+IDENTIFIERS_FILE="species_identifiers.tsv"
 
 # create paths
 CACHE_DIR_PATH=$WORKING_DIRECTORY/$CACHE_DIRECTORY
