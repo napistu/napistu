@@ -223,77 +223,11 @@ echo "Building a multisource network from: Reactome ($reactome_input), STRING ($
 python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $dogma_input $bigg_input $output_uri
 ```
 
-# Add Reactome metadata
-
-## Entity Sets - complexes, ligands, ...
-
-```{bash add_reactome_entity_sets}
-source .rvars
-# globals
-REMOTE_URL="https://storage.googleapis.com/calico-cpr-public/external_pathways/external_pathways_reactome_neo4j_members.csv"
-ENTITY_SET_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_members.csv
-
-input_uri=$CACHE_DIR_PATH/consensus.pkl
-output_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
-
-if [ -f "$ENTITY_SET_PATH" ]; then
-  echo "File already exists at: $ENTITY_SET_PATH"
-  echo "Skipping download."
-else
-  echo "File not found. Downloading from Google Cloud Storage..."
-  wget -O "$ENTITY_SET_PATH" "$REMOTE_URL"
-fi
-
-if [[ -f $input_uri ]] && [[ -f $ENTITY_SET_PATH ]]; then
-    echo "Adding qualitative grouping of species (Reactome entity sets) $input_uri from the entity sets file at $ENTITY_SET_PATH and saving results to $output_uri"
-    python -m napistu refine add_reactome_entity_sets $input_uri $ENTITY_SET_PATH $output_uri
-else
-    if [[ -f $input_uri ]]; then
-        echo "Missing Model at $input_uri"
-    fi
-    if [[ -f $ENTITY_SET_PATH ]]; then
-        echo "Missing entity sets at $ENTITY_SET_PATH"
-    fi
-fi
-```
-
-## Additional identifiers from Reactome xrefs
-
-```{bash add_reactome_xrefs}
-source .rvars
-# globals
-REMOTE_URL="https://storage.googleapis.com/calico-cpr-public/external_pathways/external_pathways_reactome_neo4j_crossref.csv"
-CROSSREF_PATH=$CACHE_DIR_PATH/external_pathways_reactome_neo4j_crossref.csv
-
-input_uri=$CACHE_DIR_PATH/consensus_w_entity_sets.pkl
-output_uri=$CACHE_DIR_PATH/consensus_w_xrefs.pkl
-
-if [ -f "$CROSSREF_PATH" ]; then
-  echo "File already exists at: $CROSSREF_PATH"
-  echo "Skipping download."
-else
-  echo "File not found. Downloading from Google Cloud Storage..."
-  wget -O "$CROSSREF_PATH" "$REMOTE_URL"
-fi
-
-if [[ -f $input_uri ]] && [[ -f $CROSSREF_PATH ]]; then
-    echo "Adding additional identifiers to $input_uri from the Reactome cross-ref file at $CROSSREF_PATH and saving results to $output_uri"
-    python -m napistu refine add_reactome_identifiers $input_uri $CROSSREF_PATH $output_uri
-else
-    if [[ -f $input_uri ]]; then
-        echo "Missing Model at $input_uri"
-    fi
-    if [[ -f $CROSSREF_PATH ]]; then
-        echo "Missing Xrefs at $CROSSREF_PATH"
-    fi
-fi
-```
-
 # Drop cofactors
 
 ```{bash remove_cofactors}
 source .rvars
-input_uri=$CACHE_DIR_PATH/consensus_w_xrefs.pkl
+input_uri=$CACHE_DIR_PATH/consensus.pkl
 output_uri=$SBML_DFS_OUT_PATH
 
 if [[ -f $input_uri ]] ; then
@@ -331,7 +265,7 @@ output_uri=$REGULATORY_DISTANCES_OUT_PATH
 if [[ -f $input_uri ]] ; then
     echo "Calculating precomputed distances from $input_uri and saving results to $output_uri"
     # when including dense sources like STRING making s > 3 is likely to run into OOM
-    python -m napistu exporter export_precomputed_distances -s 3 -q 0.2 -w "['weights', 'upstream_weights']" $input_uri $output_uri
+    python -m napistu exporter export_precomputed_distances -s 4 -q 0.2 -w "['weights', 'upstream_weights']" $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
