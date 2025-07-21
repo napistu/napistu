@@ -18,7 +18,17 @@ With Napistu you can:
 This repository includes tutorials and documentation for the project while the following repositories contain the core packages:
 
 - **[napistu-py](https://github.com/napistu/napistu-py)** - Napistu Python library: the core implementations of pathway representations and network-based searches.
+  
+[![PyPI version](https://badge.fury.io/py/napistu.svg)](https://badge.fury.io/py/napistu)
+[![Documentation Status](https://readthedocs.org/projects/napistu/badge/?version=latest)](https://napistu.readthedocs.io/en/latest/?badge=latest)
+[![CI](https://github.com/napistu/napistu-py/actions/workflows/ci.yml/badge.svg)](https://github.com/napistu/napistu-py/actions/workflows/ci.yml)
+[![Release](https://github.com/napistu/napistu-py/actions/workflows/release.yml/badge.svg)](https://github.com/napistu/napistu-py/actions/workflows/release.yml)
+[![Deploy to Cloud Run](https://github.com/napistu/napistu-py/actions/workflows/deploy.yml/badge.svg)](https://github.com/napistu/napistu-py/actions/workflows/deploy.yml)
+ 
 - **[napistu-r](https://github.com/napistu/napistu-r)** - Napistu R library: R-based network visualization and a few utilities called from `napitsu-py`.
+
+[![pkgdown](https://github.com/napistu/napistu-r/actions/workflows/pkgdown.yaml/badge.svg)](https://napistu.github.io/napistu-r/)
+[![R-CMD-check](https://github.com/napistu/napistu-r/actions/workflows/R-CMD-check-PR.yaml/badge.svg)](https://github.com/napistu/napistu-r/actions/workflows/R-CMD-check-PR.yaml)
 
 Naptisu is a rebrand and extension of [Calico Pathway Resources (CPR)](https://github.com/calico/opencpr): see [History](https://github.com/napistu/napistu/wiki/History).
 
