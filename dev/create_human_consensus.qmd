@@ -265,7 +265,7 @@ output_uri=$REGULATORY_DISTANCES_OUT_PATH
 if [[ -f $input_uri ]] ; then
     echo "Calculating precomputed distances from $input_uri and saving results to $output_uri"
     # when including dense sources like STRING making s > 3 is likely to run into OOM
-    python -m napistu exporter export_precomputed_distances -s 4 -q 0.2 -w "['weights', 'upstream_weights']" $input_uri $output_uri
+    python -m napistu exporter export_precomputed_distances -s 4 -q 0.1 -w "['weight', 'upstream_weight']" $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
