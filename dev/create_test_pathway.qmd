@@ -44,6 +44,7 @@ SBML_DFS_TABLES_DIR="sbml_dfs_tables"
 REGULATORY_GRAPH_FILE="napistu_graph.pkl"
 REGULATORY_DISTANCES_FILE="precomputed_distances.parquet"
 IDENTIFIERS_FILE="species_identifiers.tsv"
+SOURCE_COUNTS_FILE="reactions_source_total_counts.tsv"
 
 # create paths
 CACHE_DIR_PATH=$WORKING_DIRECTORY/$CACHE_DIRECTORY
@@ -51,9 +52,10 @@ EXPORT_DIR_PATH=$WORKING_DIRECTORY/$EXPORT_DIRECTORY
 SBML_DFS_OUT_PATH=$EXPORT_DIR_PATH/$SBML_DFS_FILE
 REGULATORY_GRAPH_OUT_PATH=$EXPORT_DIR_PATH/$REGULATORY_GRAPH_FILE
 REGULATORY_DISTANCES_OUT_PATH=$EXPORT_DIR_PATH/$REGULATORY_DISTANCES_FILE
-# we don't care about all of the table exports for the GCS data package; just the identifiers
+# we don't care about all of the table exports for the GCS data package; just the identifiers & source counts
 SBML_DFS_TABLES_OUT_PATH=$CACHE_DIR_PATH/$SBML_DFS_TABLES_DIR
 IDENTIFIERS_OUT_PATH=$EXPORT_DIR_PATH/$IDENTIFIERS_FILE
+SOURCE_COUNTS_OUT_PATH=$EXPORT_DIR_PATH/$SOURCE_COUNTS_FILE
 
 # save variables to a file so they can be sourced in other bash cells
 rm -f .rvars_testpw || true
@@ -71,6 +73,8 @@ echo -n 'export SBML_DFS_TABLES_OUT_PATH=' >> .rvars_testpw
 echo $SBML_DFS_TABLES_OUT_PATH >> .rvars_testpw
 echo -n 'export IDENTIFIERS_OUT_PATH=' >> .rvars_testpw
 echo $IDENTIFIERS_OUT_PATH >> .rvars_testpw
+echo -n 'export SOURCE_COUNTS_OUT_PATH=' >> .rvars_testpw
+echo $SOURCE_COUNTS_OUT_PATH >> .rvars_testpw
 
 source .rvars_testpw
 echo CACHE_DIR_PATH=$CACHE_DIR_PATH
@@ -80,6 +84,7 @@ echo SBML_DFS_TABLES_OUT_PATH=$SBML_DFS_TABLES_OUT_PATH
 echo REGULATORY_GRAPH_OUT_PATH=$REGULATORY_GRAPH_OUT_PATH
 echo REGULATORY_DISTANCES_OUT_PATH=$REGULATORY_DISTANCES_OUT_PATH
 echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
+echo SOURCE_COUNTS_OUT_PATH=$SOURCE_COUNTS_OUT_PATH
 ```
 
 ## Reactome
@@ -144,6 +149,7 @@ python -m napistu exporter export_smbl_dfs_tables $input_uri $output_uri
 ```{bash}
 source .rvars_testpw
 cp $SBML_DFS_TABLES_OUT_PATH/species_identifiers.tsv $IDENTIFIERS_OUT_PATH
+cp $SBML_DFS_TABLES_OUT_PATH/reactions_source_total_counts.tsv $SOURCE_COUNTS_OUT_PATH
 ```
 
 ## Tar and gzip
