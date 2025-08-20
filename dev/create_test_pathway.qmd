@@ -120,7 +120,12 @@ source .rvars_testpw
 input_uri=$SBML_DFS_OUT_PATH
 output_uri=$REGULATORY_GRAPH_OUT_PATH
 
-python -m napistu exporter export_igraph -g regulatory $input_uri $output_uri
+if [[ -f $input_uri ]] ; then
+    echo "Generating a regulatory graph from $input_uri and saving results to $output_uri"
+    python -m napistu exporter export_igraph -g regulatory $input_uri $output_uri
+else
+    echo "Missing $input_uri"
+fi
 ```
 
 ## Export precomputed distances
@@ -152,6 +157,47 @@ cp $SBML_DFS_TABLES_OUT_PATH/species_identifiers.tsv $IDENTIFIERS_OUT_PATH
 cp $SBML_DFS_TABLES_OUT_PATH/reactions_source_total_counts.tsv $SOURCE_COUNTS_OUT_PATH
 ```
 
+# Bundle the final artifacts and upload to GCS
+
+## Validate files
+
+```{bash}
+source .rvars_testpw
+
+sbml_dfs_uri=$SBML_DFS_OUT_PATH
+napistu_graph_uri=$REGULATORY_GRAPH_OUT_PATH
+precomputed_distances_uri=$REGULATORY_DISTANCES_OUT_PATH
+identifiers_uri=$IDENTIFIERS_OUT_PATH
+
+if [[ ! -f "$sbml_dfs_uri" ]]; then
+    echo "ERROR: SBML_dfs file not found: $sbml_dfs_uri"
+    exit 1
+fi
+
+if [[ ! -f "$napistu_graph_uri" ]]; then
+    echo "ERROR: NapistuGraph file not found: $napistu_graph_uri"
+    exit 1
+fi
+
+if [[ ! -f "$precomputed_distances_uri" ]]; then
+    echo "ERROR: Precomputed distances file not found: $precomputed_distances_uri"
+    exit 1
+fi
+
+if [[ ! -f "$identifiers_uri" ]]; then
+    echo "ERROR: Identifiers file not found: $identifiers_uri"
+    exit 1
+fi
+
+echo "All paths validated successfully!"
+
+python -m napistu helpers validate_assets \
+    "$sbml_dfs_uri" \
+    --napistu-graph-uri "$napistu_graph_uri" \
+    --precomputed-distances-uri "$precomputed_distances_uri" \
+    --identifiers-df-uri "$identifiers_uri" 
+```
+
 ## Tar and gzip
 
 ```{bash targz}
@@ -159,7 +205,7 @@ source .rvars_testpw
 tar_gz_uri=$CACHE_DIR_PATH/test_pathway.tar.gz
 echo "Taring and g-zipping the $EXPORT_DIR_PATH as $tar_gz_uri"
 
-tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH .
+tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH --exclude=".DS_Store" .
 ```
 
 ## Sync with GCS

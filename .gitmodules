@@ -7,3 +7,9 @@
 [submodule "lib/napistu-scrapyard"]
 	path = lib/napistu-scrapyard
 	url = https://github.com/napistu/napistu-scrapyard.git
+[submodule "lib/napistu-nextflow"]
+	path = lib/napistu-nextflow
+	url = https://github.com/napistu/napistu-nextflow.git
+[submodule "lib/napistu-torch"]
+	path = lib/napistu-torch
+	url = https://github.com/napistu/napistu-torch.git

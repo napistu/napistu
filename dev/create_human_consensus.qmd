@@ -61,6 +61,7 @@ SBML_DFS_TABLES_DIR="sbml_dfs_tables"
 REGULATORY_GRAPH_FILE="napistu_graph.pkl"
 REGULATORY_DISTANCES_FILE="precomputed_distances.parquet"
 IDENTIFIERS_FILE="species_identifiers.tsv"
+SOURCE_COUNTS_FILE="reactions_source_total_counts.tsv"
 
 # create paths
 CACHE_DIR_PATH=$WORKING_DIRECTORY/$CACHE_DIRECTORY
@@ -71,6 +72,7 @@ REGULATORY_DISTANCES_OUT_PATH=$EXPORT_DIR_PATH/$REGULATORY_DISTANCES_FILE
 # we don't care about all of the table exports for the GCS data package; just the identifiers
 SBML_DFS_TABLES_OUT_PATH=$CACHE_DIR_PATH/$SBML_DFS_TABLES_DIR
 IDENTIFIERS_OUT_PATH=$EXPORT_DIR_PATH/$IDENTIFIERS_FILE
+SOURCE_COUNTS_OUT_PATH=$EXPORT_DIR_PATH/$SOURCE_COUNTS_FILE
 
 # create directories if needed
 mkdir -p $CACHE_DIR_PATH
@@ -92,6 +94,8 @@ echo -n 'export SBML_DFS_TABLES_OUT_PATH=' >> .rvars
 echo $SBML_DFS_TABLES_OUT_PATH >> .rvars
 echo -n 'export IDENTIFIERS_OUT_PATH=' >> .rvars
 echo $IDENTIFIERS_OUT_PATH >> .rvars
+echo -n 'export SOURCE_COUNTS_OUT_PATH=' >> .rvars
+echo $SOURCE_COUNTS_OUT_PATH >> .rvars
 
 source .rvars
 echo CACHE_DIR_PATH=$CACHE_DIR_PATH
@@ -101,6 +105,7 @@ echo SBML_DFS_TABLES_OUT_PATH=$SBML_DFS_TABLES_OUT_PATH
 echo REGULATORY_GRAPH_OUT_PATH=$REGULATORY_GRAPH_OUT_PATH
 echo REGULATORY_DISTANCES_OUT_PATH=$REGULATORY_DISTANCES_OUT_PATH
 echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
+echo SOURCE_COUNTS_OUT_PATH=$SOURCE_COUNTS_OUT_PATH
 ```
 
 # Format Pathways
@@ -265,13 +270,13 @@ output_uri=$REGULATORY_DISTANCES_OUT_PATH
 if [[ -f $input_uri ]] ; then
     echo "Calculating precomputed distances from $input_uri and saving results to $output_uri"
     # when including dense sources like STRING making s > 3 is likely to run into OOM
-    python -m napistu exporter export_precomputed_distances -s 4 -q 0.1 -w "['weight', 'upstream_weight']" $input_uri $output_uri
+    python -m napistu exporter export_precomputed_distances -s 3 -q 0.3 -w "['weight', 'upstream_weight']" $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
 ```
 
-## smbl_dfs_tables
+## Export tabular outputs
 
 ```{bash export_smbl_dfs_tables}
 source .rvars
@@ -286,6 +291,48 @@ python -m napistu exporter export_smbl_dfs_tables --nondogmatic $input_uri $outp
 ```{bash}
 source .rvars
 cp $SBML_DFS_TABLES_OUT_PATH/species_identifiers.tsv $IDENTIFIERS_OUT_PATH
+cp $SBML_DFS_TABLES_OUT_PATH/reactions_source_total_counts.tsv $SOURCE_COUNTS_OUT_PATH
+```
+
+# Bundle the final artifacts and upload to GCS
+
+## Validate files
+
+```{bash}
+source .rvars
+
+sbml_dfs_uri=$SBML_DFS_OUT_PATH
+napistu_graph_uri=$REGULATORY_GRAPH_OUT_PATH
+precomputed_distances_uri=$REGULATORY_DISTANCES_OUT_PATH
+identifiers_uri=$IDENTIFIERS_OUT_PATH
+
+if [[ ! -f "$sbml_dfs_uri" ]]; then
+    echo "ERROR: SBML_dfs file not found: $sbml_dfs_uri"
+    exit 1
+fi
+
+if [[ ! -f "$napistu_graph_uri" ]]; then
+    echo "ERROR: NapistuGraph file not found: $napistu_graph_uri"
+    exit 1
+fi
+
+if [[ ! -f "$precomputed_distances_uri" ]]; then
+    echo "ERROR: Precomputed distances file not found: $precomputed_distances_uri"
+    exit 1
+fi
+
+if [[ ! -f "$identifiers_uri" ]]; then
+    echo "ERROR: Identifiers file not found: $identifiers_uri"
+    exit 1
+fi
+
+echo "All paths validated successfully!"
+
+python -m napistu helpers validate_assets \
+    "$sbml_dfs_uri" \
+    --napistu-graph-uri "$napistu_graph_uri" \
+    --precomputed-distances-uri "$precomputed_distances_uri" \
+    --identifiers-df-uri "$identifiers_uri" 
 ```
 
 ## Tar and gzip
@@ -296,7 +343,7 @@ tar_gz_uri="$CACHE_DIR_PATH/human_consensus.tar.gz"
 distances_filename=$(basename "$REGULATORY_DISTANCES_OUT_PATH")
 
 echo "Taring and g-zipping the $EXPORT_DIR_PATH (excluding $distances_filename) as $tar_gz_uri"
-tar -czvf "$tar_gz_uri" -C "$EXPORT_DIR_PATH" --exclude="$distances_filename" .
+tar -czvf "$tar_gz_uri" -C "$EXPORT_DIR_PATH" --exclude="$distances_filename" --exclude=".DS_Store" .
 ```
 
 ### With precomputed distances
@@ -306,7 +353,7 @@ source .rvars
 tar_gz_uri=$CACHE_DIR_PATH/human_consensus_w_distances.tar.gz
 echo "Taring and g-zipping the $EXPORT_DIR_PATH as $tar_gz_uri"
 
-tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH .
+tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH --exclude=".DS_Store" .
 ```
 
 ## Sync with GCS
