@@ -12,15 +12,20 @@ workflows:
         artifacts:
             bigg_sbml_dir: "bigg_sbmls"
             bigg_sbml_dfs: "bigg_sbml_dfs.pickle"
-            reactome_sbml_dfs: "reactome_sbml_dfs.pickle"
-            reactome_sbml_dir: "reactome_sbmls"
+            idea_yeast_raw: "idea_yeast.tsv"
+            idea_yeast_sbml_dfs: "idea_yeast_sbml_dfs.pickle"
             intact_dir: "intact"
             intact_sbml_dfs: "intact_sbml_dfs.pickle"
+            omnipath_sbml_dfs: "omnipath_sbml_dfs.pickle"
+            reactome_sbml_dir: "reactome_sbmls"
+            reactome_sbml_dfs: "reactome_sbml_dfs.pickle"
+            reactome_fi_raw: "reactome_fi.tsv"
+            reactome_fi_sbml_dfs: "reactome_fi_sbml_dfs.pickle"
             string_aliases: "string_aliases.txt"
             string_interactions: "string_interactions.txt"
             string_sbml_dfs: "string_sbml_dfs.pickle"
-            trrust_sbml_dfs: "trrust_sbml_dfs.pickle"
             trrust_raw: "trrust.csv"
+            trrust_sbml_dfs: "trrust_sbml_dfs.pickle"
 
     understanding_sbml_dfs:
         name: "understanding_sbml_dfs.qmd"

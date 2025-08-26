@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import inspect
 import logging
 import os
 import pathlib
 import re
+import warnings
 from os import PathLike
 from typing import Optional
 from subprocess import call
+
 import yaml
 from pydantic import BaseModel
 from pydantic import ValidationError
@@ -16,24 +19,6 @@ from napistu.gcs import downloads
 
 logger = logging.getLogger(__name__)
 
-def locate_test_data() -> str:
-
-    napistu_root = _find_napistu_root()
-    _validate_git_submodules(napistu_root)
-
-    test_data_path = os.path.join(
-        napistu_root,
-        "lib",
-        "napistu-py",
-        "src",
-        "tests",
-        "test_data"
-        )
-
-    if not os.path.isdir(test_data_path):
-        raise FileNotFoundError(f"Test data was not located at the expected path {test_data_path}")
-    
-    return test_data_path
 
 
 class NapistuConfig:
@@ -121,7 +106,6 @@ class NapistuConfig:
         else:
             self.related = None  # type: ignore
 
-
     def deploy(self, server_name: str, connect_servers_settings: dict[str,str], venv_path: str|None = None) -> None:
         """Deploy a Jupyter Notebook to Posit Connect
 
@@ -154,7 +138,6 @@ class NapistuConfig:
         )
 
         return None
-
 
     def load_asset(
         self,
@@ -191,6 +174,7 @@ class NapistuConfig:
         
         return asset_path
 
+    # private methods
 
     def _read_config(self, config_path: str | PathLike):
         if not os.path.isfile(config_path):
@@ -206,7 +190,6 @@ class NapistuConfig:
                 logging.error(exc)
 
         return config
-
 
     def _format_workflow_artifacts(self, workflow: str):
         available_workflows = self.config_dict["workflows"].keys()
@@ -231,7 +214,6 @@ class NapistuConfig:
                 for k in artifacts.keys()
             }
 
-
     def _create_artifact_dir(self, path: str) -> None:
         parentdir = os.path.dirname(path)
         if not os.path.isdir(parentdir):
@@ -239,65 +221,7 @@ class NapistuConfig:
             pathlib.Path(parentdir).mkdir(parents=True, exist_ok=True)
 
         return None
-
-
-def read_connect_settings(
-    server_name: str, connect_servers_settings: dict[str, dict[str, str]]
-) -> dict:
-    """
-    Read Connect Settings
-
-    Validate server_settings and then pull out the settings for the selected server.
-
-    Args:
-        server_name: str
-            Name of the server running Posit Connect
-        connect_servers_settings: dict[str, dict[str, str]]
-            Dictionary of possible server names where values are dicts containing:
-                - url: the server's url
-                - pat_secret_name: the name environmental secret containing the PAT token
-                    for deploying to Connect.
-
-    Returns:
-        Dict containing server_name's parameters:
-            server_url: str
-                URL of the Connect server
-            pat_secret_name: str
-                Name of the environmental variable containing the Connect PAT
-            connect_pat: str
-                The PAT key associated with the "pat_secret_name" secret
-    """
-
-    # validate the provided server configs
-    connect_configs = _ConnectConfigValidator(
-        config=connect_servers_settings
-    ).model_dump()["config"]
-
-    if server_name not in connect_configs.keys():
-        raise ValueError(
-            f'The provide "server_name" {server_name} did not match any of the '
-            f"configuations in \"connect_server_settings\": {' '.join(connect_configs.keys())}"
-        )
-
-    connect_settings = connect_configs[server_name]
-
-    # add the server PAT key from an environmental variable
-    connect_settings["connect_pat"] = read_environmental_variable(
-        connect_settings["pat_secret_name"]
-    )
-
-    return connect_settings
-
-
-def read_environmental_variable(envvar: str) -> str:
-    if envvar not in os.environ.keys():
-        raise ValueError(
-            f"No environmental variable named {envvar} was found.\nPlease add this to your"
-            ".bash_profile and reset your Jupyter sesion if you are working interactively"
-        )
-
-    return os.environ[envvar]
-
+    
 
 def deploy_notebook_connect(
     notebook_file: str,
@@ -367,6 +291,147 @@ def deploy_notebook_connect(
 
     return None
 
+
+def locate_test_data() -> str:
+
+    napistu_root = _find_napistu_root()
+    _validate_git_submodules(napistu_root)
+
+    test_data_path = os.path.join(
+        napistu_root,
+        "lib",
+        "napistu-py",
+        "src",
+        "tests",
+        "test_data"
+        )
+
+    if not os.path.isdir(test_data_path):
+        raise FileNotFoundError(f"Test data was not located at the expected path {test_data_path}")
+    
+    return test_data_path
+
+
+def read_connect_settings(
+    server_name: str, connect_servers_settings: dict[str, dict[str, str]]
+) -> dict:
+    """
+    Read Connect Settings
+
+    Validate server_settings and then pull out the settings for the selected server.
+
+    Args:
+        server_name: str
+            Name of the server running Posit Connect
+        connect_servers_settings: dict[str, dict[str, str]]
+            Dictionary of possible server names where values are dicts containing:
+                - url: the server's url
+                - pat_secret_name: the name environmental secret containing the PAT token
+                    for deploying to Connect.
+
+    Returns:
+        Dict containing server_name's parameters:
+            server_url: str
+                URL of the Connect server
+            pat_secret_name: str
+                Name of the environmental variable containing the Connect PAT
+            connect_pat: str
+                The PAT key associated with the "pat_secret_name" secret
+    """
+
+    # validate the provided server configs
+    connect_configs = _ConnectConfigValidator(
+        config=connect_servers_settings
+    ).model_dump()["config"]
+
+    if server_name not in connect_configs.keys():
+        raise ValueError(
+            f'The provide "server_name" {server_name} did not match any of the '
+            f"configuations in \"connect_server_settings\": {' '.join(connect_configs.keys())}"
+        )
+
+    connect_settings = connect_configs[server_name]
+
+    # add the server PAT key from an environmental variable
+    connect_settings["connect_pat"] = read_environmental_variable(
+        connect_settings["pat_secret_name"]
+    )
+
+    return connect_settings
+
+
+def read_environmental_variable(envvar: str) -> str:
+    if envvar not in os.environ.keys():
+        raise ValueError(
+            f"No environmental variable named {envvar} was found.\nPlease add this to your"
+            ".bash_profile and reset your Jupyter sesion if you are working interactively"
+        )
+
+    return os.environ[envvar]
+
+
+def setup_clean_logging(debug_mode: bool = False) -> logging.Logger:
+    """
+    Configure clean logging for tutorials by suppressing third-party noise.
+    
+    This function sets up logging to show relevant tutorial and Napistu logs
+    while suppressing noisy DEBUG/INFO messages from third-party libraries
+    like urllib3, omnipath downloaders, etc.
+    
+    Parameters
+    ----------
+    debug_mode : bool, default False
+        If True, shows more detailed logging for debugging tutorial issues.
+        When False, only shows INFO+ from Napistu/tutorial_utils and WARNING+ from others.
+        
+    Returns
+    -------
+    logging.Logger
+        Configured logger for the calling module
+        
+    Examples
+    --------
+    Basic usage in a tutorial:
+    >>> import tutorial_utils
+    >>> logger = tutorial_utils.setup_clean_logging()
+    >>> config = tutorial_utils.NapistuConfig("config.yaml", "my_workflow")
+    
+    For debugging tutorial issues:
+    >>> logger = tutorial_utils.setup_clean_logging(debug_mode=True)
+    """
+    
+    # Suppress specific warnings
+    warnings.filterwarnings("ignore", message="IProgress not found")
+    warnings.filterwarnings("ignore", message=".*jupyter.*ipywidgets.*")
+    warnings.filterwarnings("ignore", message="Environment variable .* redefined by R and overriding existing variable")
+    warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
+    
+    if debug_mode:
+        # Show more detailed logs for debugging
+        logging.basicConfig(level=logging.DEBUG)
+        log_level = logging.DEBUG
+    else:
+        # Normal mode: suppress third-party noise
+        logging.basicConfig(level=logging.WARNING)
+        log_level = logging.INFO
+        
+        # Enable Napistu and tutorial_utils logs
+        logging.getLogger('tutorial_utils').setLevel(logging.INFO)
+        logging.getLogger('napistu').setLevel(logging.INFO)
+        # Suppress the noisy napistu.rpy2.rids logger specifically  
+        logging.getLogger('napistu.rpy2.rids').setLevel(logging.WARNING)
+    
+    # Create and return logger for the calling module
+    calling_frame = inspect.currentframe().f_back
+    calling_module = calling_frame.f_globals.get('__name__', '__main__')
+    
+    logger = logging.getLogger(calling_module)
+    logger.setLevel(log_level)
+    
+    return logger
+
+
+# private utility functions
 
 def _find_napistu_root():
 
