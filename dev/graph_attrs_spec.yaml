@@ -1,5 +1,5 @@
 reactions:
     string_wt:
-        table: "string"
+        table: "STRING"
         variable: "combined_score"
         trans: "string_inv"

@@ -45,6 +45,7 @@ REGULATORY_GRAPH_FILE="napistu_graph.pkl"
 REGULATORY_DISTANCES_FILE="precomputed_distances.parquet"
 IDENTIFIERS_FILE="species_identifiers.tsv"
 SOURCE_COUNTS_FILE="reactions_source_total_counts.tsv"
+ORGANISMAL_SPECIES="human"
 
 # create paths
 CACHE_DIR_PATH=$WORKING_DIRECTORY/$CACHE_DIRECTORY
@@ -75,6 +76,8 @@ echo -n 'export IDENTIFIERS_OUT_PATH=' >> .rvars_testpw
 echo $IDENTIFIERS_OUT_PATH >> .rvars_testpw
 echo -n 'export SOURCE_COUNTS_OUT_PATH=' >> .rvars_testpw
 echo $SOURCE_COUNTS_OUT_PATH >> .rvars_testpw
+echo -n 'export ORGANISMAL_SPECIES=' >> .rvars_testpw
+echo $ORGANISMAL_SPECIES >> .rvars_testpw
 
 source .rvars_testpw
 echo CACHE_DIR_PATH=$CACHE_DIR_PATH
@@ -85,12 +88,16 @@ echo REGULATORY_GRAPH_OUT_PATH=$REGULATORY_GRAPH_OUT_PATH
 echo REGULATORY_DISTANCES_OUT_PATH=$REGULATORY_DISTANCES_OUT_PATH
 echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
 echo SOURCE_COUNTS_OUT_PATH=$SOURCE_COUNTS_OUT_PATH
+echo ORGANISMAL_SPECIES=$ORGANISMAL_SPECIES
 ```
 
 ## Reactome
 
 ```{bash reactome}
 source .rvars_testpw
+OUTPUT_URI=$CACHE_DIR_PATH/reactome.pkl
+echo "Creating a model from 4 Reactome pathways and saving the results to $OUTPUT_URI"
+
 # make the directory if needed
 mkdir -p $CACHE_DIR_PATH/reactome
 
@@ -100,7 +107,15 @@ cp ../lib/napistu-py/src/tests/test_data/reactome_glycolysis.sbml $CACHE_DIR_PAT
 cp ../lib/napistu-py/src/tests/test_data/reactome_ppp.sbml $CACHE_DIR_PATH/reactome/
 cp ../lib/napistu-py/src/tests/test_data/reactome_tca.sbml $CACHE_DIR_PATH/reactome/
 
-python -m napistu integrate reactome --overwrite $CACHE_DIR_PATH/reactome/pw_index_metabolism.tsv $CACHE_DIR_PATH/reactome.pkl
+python -m napistu integrate reactome --overwrite $CACHE_DIR_PATH/reactome/pw_index_metabolism.tsv $ORGANISMAL_SPECIES $OUTPUT_URI
+```
+
+```{bash post_consensus}
+source .rvars_testpw
+input_uri=$CACHE_DIR_PATH/reactome.pkl
+echo "Performing post-consensus validation of the $input_uri consensus"
+
+python -m napistu consensus check $input_uri
 ```
 
 ## Remove cofactors

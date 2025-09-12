@@ -53,7 +53,7 @@ yaml() {
 }
 
 # https://stackoverflow.com/questions/60569395/set-environment-variable-in-bash-in-rmarkdown
-WORKING_DIRECTORY="napistu_data/human_consensus"
+WORKING_DIRECTORY="napistu_data/human_consensus2"
 CACHE_DIRECTORY="cache"
 EXPORT_DIRECTORY="human_consensus"
 SBML_DFS_FILE="sbml_dfs.pkl"
@@ -62,6 +62,7 @@ REGULATORY_GRAPH_FILE="napistu_graph.pkl"
 REGULATORY_DISTANCES_FILE="precomputed_distances.parquet"
 IDENTIFIERS_FILE="species_identifiers.tsv"
 SOURCE_COUNTS_FILE="reactions_source_total_counts.tsv"
+ORGANISMAL_SPECIES="human"
 
 # create paths
 CACHE_DIR_PATH=$WORKING_DIRECTORY/$CACHE_DIRECTORY
@@ -96,6 +97,8 @@ echo -n 'export IDENTIFIERS_OUT_PATH=' >> .rvars
 echo $IDENTIFIERS_OUT_PATH >> .rvars
 echo -n 'export SOURCE_COUNTS_OUT_PATH=' >> .rvars
 echo $SOURCE_COUNTS_OUT_PATH >> .rvars
+echo -n 'export ORGANISMAL_SPECIES=' >> .rvars
+echo $ORGANISMAL_SPECIES >> .rvars
 
 source .rvars
 echo CACHE_DIR_PATH=$CACHE_DIR_PATH
@@ -106,6 +109,7 @@ echo REGULATORY_GRAPH_OUT_PATH=$REGULATORY_GRAPH_OUT_PATH
 echo REGULATORY_DISTANCES_OUT_PATH=$REGULATORY_DISTANCES_OUT_PATH
 echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
 echo SOURCE_COUNTS_OUT_PATH=$SOURCE_COUNTS_OUT_PATH
+echo ORGANISMAL_SPECIES=$ORGANISMAL_SPECIES
 ```
 
 # Format Pathways
@@ -116,33 +120,49 @@ echo SOURCE_COUNTS_OUT_PATH=$SOURCE_COUNTS_OUT_PATH
 - Combine all of the human models into a single `sbml_dfs` pathway
 
 ```{bash load_reactome}
-echo "Downloading Reactome data to $CACHE_DIR_PATH/reactome"
 source .rvars
-python -m napistu ingestion reactome $CACHE_DIR_PATH/reactome
+OUTPUT_URI = $CACHE_DIR_PATH/reactome
+echo "Downloading Reactome data to $OUTPUT_URI"
+
+python -m napistu ingestion reactome $OUTPUT_URI
 ```
 
 ```{bash integrate_reactome}
 source .rvars
 PW_INDEX=$CACHE_DIR_PATH/reactome/sbml/pw_index.tsv
 OUTPUT_URI=$CACHE_DIR_PATH/reactome/reactome.pkl
-
 echo "Integrating Reactome data from $PW_INDEX and saving results to $OUTPUT_URI"
+
 # use the --permissive flag because one human pathway (out of ~2500) is malformed right now
-python -m napistu integrate reactome --permissive --species "Homo sapiens" $PW_INDEX $OUTPUT_URI
+python -m napistu integrate reactome --permissive --overwrite $PW_INDEX $ORGANISMAL_SPECIES $OUTPUT_URI
 ```
 
-## TRRUST
+## Reactome FI
 
-- Download TRRUST edgelist
-- Add additional identifiers and save the result as an `sbml_dfs` pathway
-
-```{bash trrust}
+```{bash reactome_fi}
 source .rvars
+REACTOME_FI_TSV=$CACHE_DIR_PATH/reactome_fi.tsv
+OUTPUT_URI=$CACHE_DIR_PATH/reactome_fi.pkl
+echo "Downloading Reactome functional interactions to $REACTOME_FI_TSV"
+python -m napistu ingestion reactome_fi $REACTOME_FI_TSV
 
-echo "Downloading TF to target edges from TRRUST and creating an sbml_dfs model at $CACHE_DIR_PATH/trrust.pkl"
-python -m napistu ingestion trrust $CACHE_DIR_PATH/trrust.tsv
-# requires R napistu-r for adding additional identifiers (we could update this to use the Python appraoch but TRRUST functionality will probably be removed once omnipath ingestion is set up so not really worthwhile)
-python -m napistu integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/trrust.pkl
+echo "Integrating Reactome functional interactions from $REACTOME_FI_TSV into an SBML_dfs model at $OUTPUT_URI"
+python -m napistu integrate reactome_fi $REACTOME_FI_TSV $OUTPUT_URI
+```
+
+## Metabolic model - recon3D
+
+- Download the relevant model (we actually download a few models for different species (yeast, mouse, human) at the same time).
+- Integrate BiGG - calls [construct_bigg_consensus] which creates an `sbml_dfs` model and patches some weirdness in the BiGG models (e.g., missing compartments). Some of this may not be needed now since we add the "resolve" logic to `SBML_dfs` via `validate_and_resolve`.
+- Add Ensembl gene IDs (so BiGG models are appropriately merged with other models)
+
+```{bash bigg}
+source .rvars
+echo "Downloading BiGG metabolic models and formatting the human model (Recon3D) as an sbml_dfs model at $CACHE_DIR_PATH/bigg_w_ids.pkl"
+
+python -m napistu ingestion bigg $CACHE_DIR_PATH/bigg
+python -m napistu integrate bigg $CACHE_DIR_PATH/bigg/pw_index.tsv $ORGANISMAL_SPECIES $CACHE_DIR_PATH/bigg.pkl
+# python -m napistu refine expand_identifiers --ontologies "ensembl_gene" --preferred_method "bioconductor" $CACHE_DIR_PATH/bigg.pkl $ORGANISMAL_SPECIES $CACHE_DIR_PATH/bigg_w_ids.pkl
 ```
 
 ## STRING
@@ -155,28 +175,50 @@ python -m napistu integrate trrust $CACHE_DIR_PATH/trrust.tsv $CACHE_DIR_PATH/tr
 
 ```{bash string}
 source .rvars
+echo "Downloading results from STRING and HPA and integrating them to create a STRING sbml_dfs model at $CACHE_DIR_PATH/hpa_filtered_string.pkl for $ORGANISMAL_SPECIES species"
 
-echo "Downloading results from STRING and HPA and integrating them to create a STRING sbml_dfs model at $CACHE_DIR_PATH/hpa_filtered_string.pkl"
-python -m napistu ingestion string-db --species "Homo sapiens" $CACHE_DIR_PATH/string_db
-python -m napistu ingestion string-aliases --species "Homo sapiens" $CACHE_DIR_PATH/string_aliases
-python -m napistu integrate string-db -o $CACHE_DIR_PATH/string_db $CACHE_DIR_PATH/string_aliases $CACHE_DIR_PATH/string.pkl
-python -m napistu ingestion proteinatlas-subcell $CACHE_DIR_PATH/hpa_subcell.tsv
+python -m napistu ingestion string_db $ORGANISMAL_SPECIES $CACHE_DIR_PATH/string_db
+python -m napistu ingestion string_aliases $ORGANISMAL_SPECIES $CACHE_DIR_PATH/string_aliases
+python -m napistu integrate string_db $CACHE_DIR_PATH/string_db $CACHE_DIR_PATH/string_aliases $ORGANISMAL_SPECIES $CACHE_DIR_PATH/string.pkl
+python -m napistu ingestion proteinatlas_subcell $CACHE_DIR_PATH/hpa_subcell.tsv
 python -m napistu refine filter_hpa_compartments $CACHE_DIR_PATH/string.pkl $CACHE_DIR_PATH/hpa_subcell.tsv $CACHE_DIR_PATH/hpa_filtered_string.pkl
 ```
 
-## Metabolic model - recon3D
+## IntAct
 
-- Download the relevant model (we actually download a few models for different species (yeast, mouse, human) at the same time).
-- Integrate BiGG - calls [construct_bigg_consensus] which creates an `sbml_dfs` model and patches some weirdness in the BiGG models (e.g., missing compartments). Some of this may not be needed now since we add the "resolve" logic to `SBML_dfs` via `validate_and_resolve`.
-- Add Ensembl gene IDs (so BiGG models are appropriately merged with other models)
-
-```{bash bigg}
+```{bash intact}
 source .rvars
+XML_DIR=$CACHE_DIR_PATH/intact_xmls
+OUTPUT_URI=$CACHE_DIR_PATH/intact.pkl
+echo "Downloading $ORGANISMAL_SPECIES IntAct results $OUTPUT_URI"
 
-echo "Downloading BiGG metabolic models and formatting the human model (Recon3D) as an sbml_dfs model at $CACHE_DIR_PATH/bigg_w_ids.pkl"
-python -m napistu ingestion bigg $CACHE_DIR_PATH/bigg
-python -m napistu integrate bigg --species "Homo sapiens" $CACHE_DIR_PATH/bigg/pw_index.tsv $CACHE_DIR_PATH/bigg.pkl
-python -m napistu refine expand_identifiers --species "Homo sapiens" --ontologies "ensembl_gene" --preferred_method "bioconductor" $CACHE_DIR_PATH/bigg.pkl $CACHE_DIR_PATH/bigg_w_ids.pkl
+python -m napistu ingestion intact $XML_DIR $ORGANISMAL_SPECIES
+python -m napistu integrate intact $XML_DIR $ORGANISMAL_SPECIES $OUTPUT_URI
+```
+
+## Omnipath
+
+```{bash omnipath}
+source .rvars
+OUTPUT_URI=$CACHE_DIR_PATH/omnipath.pkl
+echo "Downloading $ORGANISMAL_SPECIES IntAct results $OUTPUT_URI"
+
+python -m napistu integrate omnipath -o $ORGANISMAL_SPECIES $OUTPUT_URI
+```
+
+## TRRUST
+
+- Download TRRUST edgelist
+- Add additional identifiers and save the result as an `sbml_dfs` pathway
+
+```{bash trrust}
+source .rvars
+OUTPUT_URI=$CACHE_DIR_PATH/trrust.pkl
+echo "Downloading TF to target edges from TRRUST and creating an sbml_dfs model at $OUTPUT_URI"
+
+python -m napistu ingestion trrust $CACHE_DIR_PATH/trrust.tsv
+# requires R napistu-r for adding additional identifiers (we could update this to use the Python appraoch but TRRUST functionality will probably be removed once omnipath ingestion is set up so not really worthwhile)
+python -m napistu integrate trrust --overwrite $CACHE_DIR_PATH/trrust.tsv $OUTPUT_URI
 ```
 
 ## Dogmatic Scaffold
@@ -185,9 +227,10 @@ This model just contains proteins (with BQB_IS annotations) and their associated
 
 ```{bash dogma}
 source .rvars
+OUTPUT_URI=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+echo "Creating a dogmatic scaffold sbml_dfs model and saving results to $OUTPUT_URI"
 
-echo "Creating a dogmatic scaffold sbml_dfs model and saving results to $CACHE_DIR_PATH/dogma_sbml_dfs.pkl"
-python -m napistu integrate dogmatic_scaffold --species "Homo sapiens" $CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+python -m napistu integrate dogmatic_scaffold $ORGANISMAL_SPECIES $OUTPUT_URI
 ```
 
 # Unify compartmentalization
@@ -196,10 +239,10 @@ python -m napistu integrate dogmatic_scaffold --species "Homo sapiens" $CACHE_DI
 
 ```{bash uncompartmentalize}
 source .rvars
-
 echo "Uncompartmentalizing all compartmentalized models"
-#python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/reactome/reactome.pkl $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
-#python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/trrust.pkl $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
+
+python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/reactome/reactome.pkl $CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
+python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/trrust.pkl $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
 python -m napistu refine merge_model_compartments $CACHE_DIR_PATH/bigg_w_ids.pkl $CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
 ```
 
@@ -212,6 +255,9 @@ python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/hpa_filtered_string.
 python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
 python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
 python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/intact.pkl
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/omnipath.pkl
+python -m napistu helpers validate_sbml_dfs $CACHE_DIR_PATH/reactome_fi.pkl
 ```
 
 
@@ -222,10 +268,31 @@ string_input=$CACHE_DIR_PATH/hpa_filtered_string.pkl
 trrust_input=$CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
 bigg_input=$CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
 dogma_input=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+intact_input=$CACHE_DIR_PATH/intact.pkl
+omnipath_input=$CACHE_DIR_PATH/omnipath.pkl
+reactome_fi_input=$CACHE_DIR_PATH/reactome_fi.pkl
 output_uri=$CACHE_DIR_PATH/consensus.pkl
 
-echo "Building a multisource network from: Reactome ($reactome_input), STRING ($string_input), TRRUST ($trrust_input), BiGG ($bigg_input), and Dogma ($dogma_input) and saving results to $output_uri"
-python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $dogma_input $bigg_input $output_uri
+echo "Building a multi-source network from:
+- Reactome ($reactome_input)
+- STRING ($string_input)
+- TRRUST ($trrust_input)
+- BiGG ($bigg_input)
+- Dogma ($dogma_input)
+- IntAct ($intact_input)
+- OmniPath ($omnipath_input)
+- Reactome FI ($reactome_fi_input)
+and saving results to $output_uri"
+
+python -m napistu consensus create --nondogmatic $reactome_input $string_input $trrust_input $dogma_input $bigg_input $intact_input $omnipath_input $reactome_fi_input $output_uri
+```
+
+```{bash post_consensus}
+source .rvars
+input_uri=$CACHE_DIR_PATH/consensus.pkl
+
+echo "Performing post-consensus validation of the $input_uri consensus"
+python -m napistu consensus check $input_uri
 ```
 
 # Drop cofactors
