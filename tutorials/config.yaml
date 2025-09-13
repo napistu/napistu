@@ -6,7 +6,7 @@ global_vars:
 workflows:
     downloading_pathway_data:
         name: "downloading_pathway_data.qmd"
-        title: "CPR: Downloading Pathway Data"
+        title: "Napistu: Downloading Pathway Data"
         species_specific: False
         connect_id: 
         artifacts:
@@ -29,7 +29,7 @@ workflows:
 
     understanding_sbml_dfs:
         name: "understanding_sbml_dfs.qmd"
-        title: "CPR: Understanding the SBML DFs Pathway Format"
+        title: "Napistu: Understanding the SBML DFs Pathway Format"
         species_specific: False
         connect_id: 
         artifacts:
@@ -37,14 +37,14 @@ workflows:
 
     merging_models_into_a_consensus:
         name: "merging_models_into_a_consensus.qmd"
-        title: "CPR: Merging Pathway Models into a Consensus"
+        title: "Napistu: Merging Pathway Models into a Consensus"
         species_specific: False
         connect_id: 
         artifacts:
 
     formatting_sbml_dfs_as_napistu_graphs:
         name: "formatting_sbml_dfs_as_napistu_graphs.qmd"
-        title: "CPR: Formatting sbml_dfs as napistu_graphs"
+        title: "Napistu: Formatting sbml_dfs as napistu_graphs"
         species_specific: False
         connect_id: 
         artifacts:
@@ -52,7 +52,7 @@ workflows:
 
     suggesting_mechanisms_with_networks:
         name: "suggesting_mechanisms_with_networks.qmd"
-        title: "CPR: Suggesting Mechanisms with Networks"
+        title: "Napistu: Suggesting Mechanisms with Networks"
         species_specific: False
         connect_id: 
         artifacts:
@@ -61,7 +61,7 @@ workflows:
 
     working_with_genome_scale_pathways:
         name: "working_with_genome_scale_pathways.qmd"
-        title: "CPR: Working with Genome-Scale Pathways"
+        title: "Napistu: Working with Genome-Scale Pathways"
         species_specific: False
         connect_id: 
         artifacts:
@@ -69,7 +69,9 @@ workflows:
 
     adding_data_to_graphs:
         name: "adding_data_to_graphs.qmd"
-        title: "CPR: Adding Data to Graphs"
+        title: "Napistu: Adding Data to Graphs"
         species_specific: False
         connect_id: 
         artifacts:
+            sbml_dfs: "test_pathway/sbml_dfs.pkl"
+            napistu_graph: "test_pathway/regulatory_graph.pkl"
