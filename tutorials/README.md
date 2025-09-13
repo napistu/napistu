@@ -13,5 +13,5 @@ uv pip install '../lib/napistu-py[rpy2]'
 # install runtime dependencies
 uv pip install pycairo seaborn
 
-python -m ipykernel install --name napistu_tutorials --display-name "Napistu - Tutorials" --user
+python -m ipykernel install --name napistu_tutorials --display-name "Napistu - Tutorials"
 ```
