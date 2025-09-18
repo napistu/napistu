@@ -2354,99 +2354,124 @@ ORGANISMAL_SPECIES=human</code></pre>
   self.parse_args(ctx, args)
 
   0%|          | 0/4 [00:00&lt;?, ?it/s]
- 50%|█████     | 2/4 [00:00&lt;00:00, 17.62it/s]
-100%|██████████| 4/4 [00:00&lt;00:00, 15.45it/s]
-100%|██████████| 4/4 [00:00&lt;00:00, 15.74it/s]
-[09/12 15:10] INFO     Reporting possible issues in component models                                     consensus.py:66
-              INFO     Running in dogmatic mode - differences genes, transcripts, and proteins     sbml_dfs_utils.py:987
+ 25%|██▌       | 1/4 [00:00&lt;00:00,  5.28it/s]
+ 50%|█████     | 2/4 [00:00&lt;00:00,  5.82it/s]
+ 75%|███████▌  | 3/4 [00:00&lt;00:00,  5.15it/s]
+100%|██████████| 4/4 [00:00&lt;00:00,  3.71it/s]
+100%|██████████| 4/4 [00:00&lt;00:00,  4.19it/s]
+[09/17 21:29] INFO     Reporting possible issues in component models                                     consensus.py:68
+              INFO     Running in dogmatic mode - differences genes, transcripts, and proteins    sbml_dfs_utils.py:1041
                        will try to be maintained as separate species.                                                   
-              INFO     Defining compartments based on unique ids                                        consensus.py:904
-              INFO     Creating source table                                                            consensus.py:849
-              INFO     Aggregating old sources                                                          consensus.py:855
-              INFO     Returning new source table                                                       consensus.py:870
-              INFO     &gt;&gt;&gt;&gt; 14 c_id entries merged into 6                                              consensus.py:2012
-              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2064
-              INFO     All merges names matched exactly                                                consensus.py:2072
-              INFO     Defining species based on unique ids                                             consensus.py:910
-              INFO     Creating source table                                                            consensus.py:849
-              INFO     Aggregating old sources                                                          consensus.py:855
-              INFO     Returning new source table                                                       consensus.py:870
-              INFO     &gt;&gt;&gt;&gt; 148 s_id entries merged into 64                                            consensus.py:2012
-              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2064
-              INFO     All merges names matched exactly                                                consensus.py:2072
-              INFO     Defining compartmentalized species based on unique species x compartments        consensus.py:919
-              INFO     &gt;&gt;&gt;&gt; 164 sc_id entries merged into 77                                           consensus.py:2012
-              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2064
-              WARNING                                                                                  consensus.py:2074
+              INFO     Defining compartments based on unique ids                                        consensus.py:911
+              INFO     Creating source table                                                            consensus.py:856
+              INFO     Aggregating old sources                                                          consensus.py:862
+              INFO     Returning new source table                                                       consensus.py:877
+              INFO     &gt;&gt;&gt;&gt; 14 c_id entries merged into 6                                              consensus.py:2032
+              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2084
+              INFO     All merges names matched exactly                                                consensus.py:2092
+              INFO     Defining species based on unique ids                                             consensus.py:917
+              INFO     Creating source table                                                            consensus.py:856
+              INFO     Aggregating old sources                                                          consensus.py:862
+              INFO     Returning new source table                                                       consensus.py:877
+              INFO     &gt;&gt;&gt;&gt; 148 s_id entries merged into 64                                            consensus.py:2032
+              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2084
+              INFO     All merges names matched exactly                                                consensus.py:2092
+              INFO     Defining compartmentalized species based on unique species x compartments        consensus.py:926
+              INFO     &gt;&gt;&gt;&gt; 164 sc_id entries merged into 77                                           consensus.py:2032
+              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2084
+              WARNING                                                                                  consensus.py:2094
                        1 merges were of entities with distinct names, including:                                        
                                                                                                                         
-              WARNING  PRPS2 dimer, PRPS1L dimer  &amp; PRPS1 dimer                                        consensus.py:2089
+              WARNING  PRPS2 dimer, PRPS1L dimer  &amp; PRPS1 dimer                                        consensus.py:2109
                                                                                                                         
-              INFO     Creating source table                                                            consensus.py:849
-              INFO     Aggregating old sources                                                          consensus.py:855
-              INFO     Returning new source table                                                       consensus.py:870
-              INFO     Define reactions based on membership of identical compartmentalized species      consensus.py:933
-              INFO     Merging reactions based on identical membership (sc_id + stoichiometry)          consensus.py:288
-              INFO     &gt;&gt;&gt;&gt; 50 r_id entries merged into 25                                             consensus.py:2012
-              INFO     Creating formulas for to-be-merged reactions to help with reporting merges of   consensus.py:2021
+              INFO     Creating source table                                                            consensus.py:856
+              INFO     Aggregating old sources                                                          consensus.py:862
+              INFO     Returning new source table                                                       consensus.py:877
+              INFO     Define reactions based on membership of identical compartmentalized species      consensus.py:940
+              INFO     Merging reactions based on identical membership (sc_id + stoichiometry)          consensus.py:290
+              INFO     &gt;&gt;&gt;&gt; 50 r_id entries merged into 25                                             consensus.py:2032
+              INFO     Creating formulas for to-be-merged reactions to help with reporting merges of   consensus.py:2041
                        reactions with inconsistently named reactants                                                    
-              INFO     Done creating reaction formulas                                                 consensus.py:2046
-              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2064
-              INFO     All merges names matched exactly                                                consensus.py:2072
-              INFO     Merging reactions identifiers                                                    consensus.py:321
-              INFO     Merging reactions sources                                                        consensus.py:333
-              INFO     Creating source table                                                            consensus.py:849
-              INFO     Aggregating old sources                                                          consensus.py:855
-              INFO     Returning new source table                                                       consensus.py:870
-              INFO     Annotating reversibility based on merged reactions                               consensus.py:945
-              INFO     Define reaction species based on reactions                                       consensus.py:951</code></pre>
+              INFO     Done creating reaction formulas                                                 consensus.py:2066
+              INFO     Testing for identical formulas of to-be-merged reactions                        consensus.py:2084
+              INFO     All merges names matched exactly                                                consensus.py:2092
+              INFO     Merging reactions identifiers                                                    consensus.py:323
+              INFO     Merging reactions sources                                                        consensus.py:335
+              INFO     Creating source table                                                            consensus.py:856
+              INFO     Aggregating old sources                                                          consensus.py:862
+              INFO     Returning new source table                                                       consensus.py:877
+              INFO     Annotating reversibility based on merged reactions                               consensus.py:952
+              INFO     Define reaction species based on reactions                                       consensus.py:958</code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> .rvars_testpw</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="va">input_uri</span><span class="op">=</span><span class="va">$CACHE_DIR_PATH</span>/reactome.pkl</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Performing post-consensus validation of the </span><span class="va">$input_uri</span><span class="st"> consensus&quot;</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> napistu consensus check <span class="va">$input_uri</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Summarize the model from </span><span class="va">$input_uri</span><span class="st"> consensus&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> napistu helpers summarize_sbml_dfs <span class="va">$input_uri</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Performing post-consensus validation of the </span><span class="va">$input_uri</span><span class="st"> consensus&quot;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> napistu consensus check <span class="va">$input_uri</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Performing post-consensus validation of the napistu_data/test_pathway/cache/reactome.pkl consensus
-[09/12 15:10] INFO     Checking consensus model: napistu_data/test_pathway/cache/reactome.pkl            __main__.py:478
-              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1734
+<pre><code>Summarize the model from napistu_data/test_pathway/cache/reactome.pkl consensus
+   Metric                            Value      
+0   Species                           129       
+1   - Metabolites                     62 (48.1%)
+2   - Complexs                        51 (39.5%)
+3   - Proteins                        16 (12.4%)
+4                                               
+5   Compartments                      9         
+6   - cytosol                         95 (59.7%)
+7   - mitochondrial matrix            41 (25.8%)
+8   - mitochondrial inner membrane    6 (3.8%)  
+9   - endoplasmic reticulum membrane  6 (3.8%)  
+10  - nucleoplasm                     5 (3.1%)  
+11  - endoplasmic reticulum lumen     4 (2.5%)  
+12  - nuclear envelope                1 (0.6%)  
+13  - extracellular region            1 (0.6%)  
+14                                              
+15  Compartmentalized Species         159       
+16  Reactions                         86        
+17  Reaction Species                  434       
+Performing post-consensus validation of the napistu_data/test_pathway/cache/reactome.pkl consensus
+[09/17 21:29] INFO     Checking consensus model: napistu_data/test_pathway/cache/reactome.pkl            __main__.py:478
+              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1788
                        None explicitly to remove this warning.                                                          
-              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1734
+              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1788
                        None explicitly to remove this warning.                                                          
-              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1734
+              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1788
                        None explicitly to remove this warning.                                                          
-              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1734
+              WARNING  &lt;2 priority pathways found, using all pathways. Set priority_pathways as   sbml_dfs_utils.py:1788
                        None explicitly to remove this warning.                                                          
 Entity type: species, Check type: source_cooccurrence
 pathway_id          glucose metabolism  glycolysis  ppp  tca
 pathway_id                                                  
-glucose metabolism                  80          55   10   17
-glycolysis                          55          55    9   10
-ppp                                 10           9   41    8
-tca                                 17          10    8   37
+glucose metabolism  80                  55          10   17 
+glycolysis          55                  55           9   10 
+ppp                 10                   9          41    8 
+tca                 17                  10           8   37 
 Entity type: species, Check type: ontology_x_source_cooccurrence
 pathway_id                   glucose metabolism  glycolysis  ppp  tca
 bqb_ontology                                                         
-BQB_HAS_PART::chebi                           8           6    4    7
-BQB_HAS_PART::uniprot                        32          23    7   13
-BQB_IS::chebi                                38          30   29   23
-BQB_IS::reactome                             80          55   41   37
-BQB_IS::uniprot                              10           2    5    1
-BQB_IS_DESCRIBED_BY::pubmed                   9           7    4    2
-BQB_IS_HOMOLOG_TO::reactome                  41          24   12   14
+BQB_HAS_PART::chebi           8                   6           4    7 
+BQB_HAS_PART::uniprot        32                  23           7   13 
+BQB_IS::chebi                38                  30          29   23 
+BQB_IS::reactome             80                  55          41   37 
+BQB_IS::uniprot              10                   2           5    1 
+BQB_IS_DESCRIBED_BY::pubmed   9                   7           4    2 
+BQB_IS_HOMOLOG_TO::reactome  41                  24          12   14 
 Entity type: compartments, Check type: source_cooccurrence
 pathway_id          glucose metabolism  glycolysis  ppp  tca
 pathway_id                                                  
-glucose metabolism                   8           4    1    3
-glycolysis                           4           4    1    1
-ppp                                  1           1    1    1
-tca                                  3           1    1    4
+glucose metabolism  8                   4           1    3  
+glycolysis          4                   4           1    1  
+ppp                 1                   1           1    1  
+tca                 3                   1           1    4  
 Entity type: compartments, Check type: ontology_x_source_cooccurrence
 pathway_id    glucose metabolism  glycolysis  ppp  tca
 bqb_ontology                                          
-BQB_IS::go                     8           4    1    4
+BQB_IS::go    8                   4           1    4  
               INFO     Consensus model check completed                                                   __main__.py:487</code></pre>
 </div>
 </div>
@@ -2460,22 +2485,22 @@ BQB_IS::go                     8           4    1    4
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> napistu refine drop_cofactors <span class="va">$input_uri</span> <span class="va">$output_uri</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[09/12 15:10] INFO     There were 15 unique cofactor species found: ADP, AMP, ATP, CO2, GDP, GTP, Glu,  cofactors.py:326
+<pre><code>[09/17 21:29] INFO     There were 15 unique cofactor species found: ADP, AMP, ATP, CO2, GDP, GTP, Glu,  cofactors.py:326
                        H+, NAD+, NADH, NADP+, NADPH, PO4, acetyl-CoA, water                                             
               WARNING  15 of 30 cofactors were not located in the pathway model: Cl-, CoA, FAD, FADH2,  cofactors.py:337
                        GSH, GSSG, Gln, H2CO3, HCO3, Na+, O2, PPi, SAH, SAM, UDP                                         
               INFO     95 of 434 reaction species will be filtered as cofactors                          cofactors.py:57
                    count
 filter_reason           
-ATP PO4 donation      22
-PO4                   18
-H+                    17
-Water                 14
-CO2                   10
-GTP PO4 donation       6
-NADH H- donation       4
-NADPH H- donation      2
-ATP PPi donation       2</code></pre>
+ATP PO4 donation   22   
+PO4                18   
+H+                 17   
+Water              14   
+CO2                10   
+GTP PO4 donation    6   
+NADH H- donation    4   
+NADPH H- donation   2   
+ATP PPi donation    2   </code></pre>
 </div>
 </div>
 </section>
@@ -2494,27 +2519,27 @@ ATP PPi donation       2</code></pre>
 <span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generating a regulatory graph from napistu_data/test_pathway/test_pathway/sbml_dfs.pkl and saving results to napistu_data/test_pathway/test_pathway/napistu_graph.pkl
-[09/12 15:10] INFO     Organizing all network nodes (compartmentalized species and reactions)          net_create.py:115
+[09/17 21:29] INFO     Organizing all network nodes (compartmentalized species and reactions)          net_create.py:115
               INFO     Formatting edges as a regulatory graph                                          net_create.py:157
               INFO     Processing 339 reaction species using the regulatory hierarchy            net_create_utils.py:165
               INFO     Adding reversibility and other meta-data from reactions_data                    net_create.py:169
               INFO     Creating reverse reactions for reversible reactions on a directed graph         net_create.py:176
               WARNING  3 edges were dropped due to duplicated origin -&gt; target relationiships, use     net_create.py:207
                        verbose for more information                                                                     
-           from          to  stoichiometry     sbo_term       r_id species_type  r_isreversible direction
-263  SC00000058  SC00000062            0.0  SBO:0000013  R00000059      complex           False   forward
-268  SC00000058  SC00000062            0.0  SBO:0000013  R00000060      complex           False   forward
-250  SC00000058  SC00000059            0.0  SBO:0000013  R00000057      complex           False   forward
-256  SC00000058  SC00000059            0.0  SBO:0000013  R00000058      complex           False   forward
-167  SC00000072  SC00000061            0.0  SBO:0000013  R00000034      complex           False   forward
-232  SC00000072  SC00000061            0.0  SBO:0000013  R00000053      complex           False   forward
+    from        to           stoichiometry sbo_term     r_id       species_type   r_isreversible direction 
+250  SC00000058  SC00000059  0.0            SBO:0000013  R00000057  complex       False           forward  
+256  SC00000058  SC00000059  0.0            SBO:0000013  R00000058  complex       False           forward  
+167  SC00000072  SC00000061  0.0            SBO:0000013  R00000034  complex       False           forward  
+232  SC00000072  SC00000061  0.0            SBO:0000013  R00000053  complex       False           forward  
+263  SC00000058  SC00000062  0.0            SBO:0000013  R00000059  complex       False           forward  
+268  SC00000058  SC00000062  0.0            SBO:0000013  R00000060  complex       False           forward  
               INFO     Formatting NapistuGraph output                                                  net_create.py:230
-              INFO     No isolated reactions vertices found to remove                                     ng_core.py:900
-              WARNING  reactions_attrs is empty                                                          ng_core.py:1391
-              WARNING  No reactions_attrs found. Use set_graph_attrs() to configure reactions attributes ng_utils.py:623
+              INFO     No isolated reactions vertices found to remove                                    ng_core.py:1042
+              WARNING  reactions_attrs is empty                                                          ng_core.py:1533
+              WARNING  No reactions_attrs found. Use set_graph_attrs() to configure reactions attributes ng_utils.py:753
                        before extracting edges data.                                                                    
-              WARNING  reactions_attrs is empty                                                          ng_core.py:1391
-              WARNING  No reactions_attrs found. Use set_graph_attrs() to configure reactions            ng_core.py:1692
+              WARNING  reactions_attrs is empty                                                          ng_core.py:1533
+              WARNING  No reactions_attrs found. Use set_graph_attrs() to configure reactions            ng_core.py:1834
                        attributes.                                                                                      </code></pre>
 </div>
 </div>
@@ -2530,9 +2555,9 @@ ATP PPi donation       2</code></pre>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> napistu exporter export_precomputed_distances <span class="at">-s</span> 10 <span class="va">$input_uri</span> <span class="va">$output_uri</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Saving species-to-species distances to napistu_data/test_pathway/test_pathway/precomputed_distances.parquet using the napistu_data/test_pathway/test_pathway/napistu_graph.pkl graph
-[09/12 15:10] INFO     Calculating distances for 1 partitions                                           precompute.py:98
-              INFO     Filtering distances by path length (10) and score quantile (1.0)                precompute.py:113
-              INFO     filtered 1909 possible paths with length &gt; 10                                   precompute.py:271</code></pre>
+[09/17 21:29] INFO     Calculating distances for 1 partitions                                           precompute.py:96
+              INFO     Filtering distances by path length (10) and score quantile (1.0)                precompute.py:111
+              INFO     Validating precomputed distances                                                precompute.py:121</code></pre>
 </div>
 </div>
 </section>
@@ -2545,10 +2570,10 @@ ATP PPi donation       2</code></pre>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> napistu exporter export_smbl_dfs_tables <span class="va">$input_uri</span> <span class="va">$output_uri</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[09/12 15:10] INFO     Exporting tables with dogmatic = True                                             __main__.py:953
-              INFO     Running in dogmatic mode - differences genes, transcripts, and proteins     sbml_dfs_utils.py:987
+<pre><code>[09/17 21:29] INFO     Exporting tables with dogmatic = True                                             __main__.py:953
+              INFO     Running in dogmatic mode - differences genes, transcripts, and proteins    sbml_dfs_utils.py:1041
                        will try to be maintained as separate species.                                                   
-              WARNING  Directory napistu_data/test_pathway/cache/sbml_dfs_tables already exists and sbml_dfs_core.py:378
+              WARNING  Directory napistu_data/test_pathway/cache/sbml_dfs_tables already exists and sbml_dfs_core.py:380
                        overwrite is False. Files will be added to the existing directory.                               </code></pre>
 </div>
 </div>
@@ -2597,20 +2622,20 @@ ATP PPi donation       2</code></pre>
 <span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> napistu helpers validate_assets <span class="dt">\</span></span>
 <span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;</span><span class="va">$sbml_dfs_uri</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">--napistu-graph-uri</span> <span class="st">&quot;</span><span class="va">$napistu_graph_uri</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">--precomputed-distances-uri</span> <span class="st">&quot;</span><span class="va">$precomputed_distances_uri</span><span class="st">&quot;</span> <span class="dt">\</span></span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">--identifiers-df-uri</span> <span class="st">&quot;</span><span class="va">$identifiers_uri</span><span class="st">&quot;</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">--napistu_graph_uri</span> <span class="st">&quot;</span><span class="va">$napistu_graph_uri</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">--precomputed_distances_uri</span> <span class="st">&quot;</span><span class="va">$precomputed_distances_uri</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">--identifiers_df_uri</span> <span class="st">&quot;</span><span class="va">$identifiers_uri</span><span class="st">&quot;</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>All paths validated successfully!
-[09/12 15:10] INFO     Loading SBML_dfs from: napistu_data/test_pathway/test_pathway/sbml_dfs.pkl       __main__.py:1061
-              INFO     Loading NapistuGraph from:                                                       __main__.py:1067
+[09/17 21:29] INFO     Loading SBML_dfs from: napistu_data/test_pathway/test_pathway/sbml_dfs.pkl       __main__.py:1070
+              INFO     Loading NapistuGraph from:                                                       __main__.py:1076
                        napistu_data/test_pathway/test_pathway/napistu_graph.pkl                                         
-              INFO     Loading precomputed distances from:                                              __main__.py:1072
+              INFO     Loading precomputed distances from:                                              __main__.py:1081
                        napistu_data/test_pathway/test_pathway/precomputed_distances.parquet                             
-              INFO     Loading identifiers DataFrame from:                                              __main__.py:1077
+              INFO     Loading identifiers DataFrame from:                                              __main__.py:1086
                        napistu_data/test_pathway/test_pathway/species_identifiers.tsv                                   
-              INFO     Validating assets...                                                             __main__.py:1081
-              INFO     Asset validation completed successfully!                                         __main__.py:1089</code></pre>
+              INFO     Validating assets...                                                             __main__.py:1090
+              INFO     Asset validation completed successfully!                                         __main__.py:1098</code></pre>
 </div>
 </div>
 </section>
@@ -2643,9 +2668,9 @@ a ./species_identifiers.tsv</code></pre>
 <pre><code>WARNING: [seanmchackett@gmail.com] does not have permission to access projects instance [shackett-napistu-public] (or it may not exist): The caller does not have permission. This command is authenticated as seanmchackett@gmail.com which is the active account specified by the [core/account] property
 Updated property [core/project].
 Copying file://napistu_data/test_pathway/cache/test_pathway.tar.gz [Content-Type=application/x-tar]...
-/ [0 files][    0.0 B/ 56.3 KiB]                                                
-/ [1 files][ 56.3 KiB/ 56.3 KiB]                                                
-Operation completed over 1 objects/56.3 KiB.                                     </code></pre>
+/ [0 files][    0.0 B/ 60.0 KiB]                                                
+/ [1 files][ 60.0 KiB/ 60.0 KiB]                                                
+Operation completed over 1 objects/60.0 KiB.                                     </code></pre>
 </div>
 </div>
 </section>
