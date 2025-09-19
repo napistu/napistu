@@ -552,7 +552,7 @@ fi
 
 ```{bash}
 source .rvars
-echo "Relocating select flat files to tarr'd human_consensus directory
+echo "Relocating select flat files from $SBML_DFS_TABLES_OUT_PATH to tarr'd human_consensus directory"
 cp $SBML_DFS_TABLES_OUT_PATH/species_identifiers.tsv $IDENTIFIERS_OUT_PATH
 cp $SBML_DFS_TABLES_OUT_PATH/reactions_source_total_counts.tsv $SOURCE_COUNTS_OUT_PATH
 ```
@@ -602,29 +602,33 @@ python -m napistu helpers validate_assets \
 
 ```{bash}
 source .rvars
-tar_gz_uri="$CACHE_DIR_PATH/human_consensus.tar.gz"
-distances_filename=$(basename "$REGULATORY_DISTANCES_OUT_PATH")
+TAR_GZ_URI="$CACHE_DIR_PATH/human_consensus.tar.gz"
+DISTANCE_FILENAME=$(basename "$REGULATORY_DISTANCES_OUT_PATH")
 
-echo "Taring and g-zipping the $EXPORT_DIR_PATH (excluding $distances_filename) as $tar_gz_uri"
-tar -czvf "$tar_gz_uri" -C "$EXPORT_DIR_PATH" --exclude="$distances_filename" --exclude=".DS_Store" .
+echo "Taring and g-zipping the $EXPORT_DIR_PATH (excluding $DISTANCE_FILENAME) as $TAR_GZ_URI"
+tar -czvf "$TAR_GZ_URI" -C "$EXPORT_DIR_PATH" --exclude="$DISTANCE_FILENAME" --exclude=".DS_Store" .
 ```
 
 ### With precomputed distances
 
 ```{bash}
 source .rvars
-tar_gz_uri=$CACHE_DIR_PATH/human_consensus_w_distances.tar.gz
-echo "Taring and g-zipping the $EXPORT_DIR_PATH as $tar_gz_uri"
+TAR_GZ_URI=$CACHE_DIR_PATH/human_consensus_w_distances.tar.gz
+echo "Taring and g-zipping the $EXPORT_DIR_PATH as $TAR_GZ_URI"
 
-tar -czvf $tar_gz_uri -C $EXPORT_DIR_PATH --exclude=".DS_Store" .
+tar -czvf $TAR_GZ_URI -C $EXPORT_DIR_PATH --exclude=".DS_Store" .
 ```
 
 ## Sync with GCS
 
 ```{bash}
 source .rvars
-gcloud config set project shackett-napistu-public
-gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://shackett-napistu-public/human_consensus.tar.gz
-gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
+MANUAL_TRIGGER="false"
+
+if [[ ! -f "$MANUAL_TRIGGER" ]]; then
+    gcloud config set project shackett-napistu-public
+    gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://shackett-napistu-public/human_consensus.tar.gz
+    gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
+fi
 ```
 
