@@ -109,12 +109,14 @@ cp ../lib/napistu-py/src/tests/test_data/reactome_tca.sbml $CACHE_DIR_PATH/react
 
 python -m napistu integrate reactome --overwrite $CACHE_DIR_PATH/reactome/pw_index_metabolism.tsv $ORGANISMAL_SPECIES $OUTPUT_URI
 ```
-
-```{bash post_consensus}
+```{bash model_summary}
 source .rvars_testpw
 input_uri=$CACHE_DIR_PATH/reactome.pkl
-echo "Performing post-consensus validation of the $input_uri consensus"
 
+echo "Summarize the model from $input_uri consensus"
+python -m napistu helpers summarize_sbml_dfs $input_uri
+
+echo "Performing post-consensus validation of the $input_uri consensus"
 python -m napistu consensus check $input_uri
 ```
 
@@ -208,9 +210,9 @@ echo "All paths validated successfully!"
 
 python -m napistu helpers validate_assets \
     "$sbml_dfs_uri" \
-    --napistu-graph-uri "$napistu_graph_uri" \
-    --precomputed-distances-uri "$precomputed_distances_uri" \
-    --identifiers-df-uri "$identifiers_uri" 
+    --napistu_graph_uri "$napistu_graph_uri" \
+    --precomputed_distances_uri "$precomputed_distances_uri" \
+    --identifiers_df_uri "$identifiers_uri" 
 ```
 
 ## Tar and gzip
