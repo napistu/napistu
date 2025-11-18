@@ -39,10 +39,10 @@ which R
 R --version
 ```
 
-Within this virtual env we can access the CPR CLI using `python -m napistu ...`. These CLI options are configured in napistu-py's `main.py`.
+Within this virtual env we can access the Napistu CLI using `napistu ...`. These CLI options are configured in napistu-py's `main.py`.
 
 ```{bash cli_demo}
-python -m napistu --help
+napistu --help
 ```
 
 Now, we can set some global parameters which should be consistent across bash cells.
@@ -53,9 +53,11 @@ yaml() {
 }
 
 # https://stackoverflow.com/questions/60569395/set-environment-variable-in-bash-in-rmarkdown
-WORKING_DIRECTORY="napistu_data/human_consensus"
+MODEL_PRIMARY="human_consensus"
+MODEL_W_PRECOMPUTED_DISTANCES="human_consensus_w_distances"
+
+WORKING_DIRECTORY="napistu_data/$MODEL_PRIMARY"
 CACHE_DIRECTORY="cache"
-EXPORT_DIRECTORY="human_consensus"
 SBML_DFS_FILE="sbml_dfs.pkl"
 SBML_DFS_TABLES_DIR="sbml_dfs_tables"
 REGULATORY_GRAPH_FILE="napistu_graph.pkl"
@@ -81,6 +83,10 @@ mkdir -p $EXPORT_DIR_PATH
 
 # save variables to a file so they can be sourced in other bash cells
 rm -f .rvars || true
+echo -n 'export MODEL_PRIMARY=' >> .rvars
+echo $MODEL_PRIMARY >> .rvars
+echo -n 'export MODEL_W_PRECOMPUTED_DISTANCES=' >> .rvars
+echo $MODEL_W_PRECOMPUTED_DISTANCES >> .rvars
 echo -n 'export CACHE_DIR_PATH=' >> .rvars
 echo $CACHE_DIR_PATH >> .rvars
 echo -n 'export EXPORT_DIR_PATH=' >> .rvars
@@ -100,7 +106,29 @@ echo $SOURCE_COUNTS_OUT_PATH >> .rvars
 echo -n 'export ORGANISMAL_SPECIES=' >> .rvars
 echo $ORGANISMAL_SPECIES >> .rvars
 
+# alternative network with no reaction vertices
+MODEL_NO_RXNS="human_consensus_no_rxns"
+RXN_FREE_EXPORT_DIR="human_consensus_no_rxns"
+RXN_FREE_GRAPH_FILE="napistu_graph.pkl"
+RXN_FREE_EXPORT_DIR_PATH=$WORKING_DIRECTORY/$RXN_FREE_EXPORT_DIR
+RXN_FREE_SBML_DFS_OUT_PATH=$RXN_FREE_EXPORT_DIR_PATH/$SBML_DFS_FILE
+RXN_FREE_GRAPH_OUT_PATH=$RXN_FREE_EXPORT_DIR_PATH/$REGULATORY_GRAPH_FILE
+RXN_FREE_IDENTIFIERS_OUT_PATH=$RXN_FREE_EXPORT_DIR_PATH/$IDENTIFIERS_FILE
+mkdir -p $RXN_FREE_EXPORT_DIR_PATH
+echo -n 'export MODEL_NO_RXNS=' >> .rvars
+echo $MODEL_NO_RXNS >> .rvars
+echo -n 'export RXN_FREE_EXPORT_DIR_PATH=' >> .rvars
+echo $RXN_FREE_EXPORT_DIR_PATH >> .rvars
+echo -n 'export RXN_FREE_SBML_DFS_OUT_PATH=' >> .rvars
+echo $RXN_FREE_SBML_DFS_OUT_PATH >> .rvars
+echo -n 'export RXN_FREE_GRAPH_OUT_PATH=' >> .rvars
+echo $RXN_FREE_GRAPH_OUT_PATH >> .rvars
+echo -n 'export RXN_FREE_IDENTIFIERS_OUT_PATH=' >> .rvars
+echo $RXN_FREE_IDENTIFIERS_OUT_PATH >> .rvars
+
 source .rvars
+echo MODEL_PRIMARY=$MODEL_PRIMARY
+echo MODEL_W_PRECOMPUTED_DISTANCES=$MODEL_W_PRECOMPUTED_DISTANCES
 echo CACHE_DIR_PATH=$CACHE_DIR_PATH
 echo EXPORT_DIR_PATH=$EXPORT_DIR_PATH
 echo SBML_DFS_OUT_PATH=$SBML_DFS_OUT_PATH
@@ -110,6 +138,11 @@ echo REGULATORY_DISTANCES_OUT_PATH=$REGULATORY_DISTANCES_OUT_PATH
 echo IDENTIFIERS_OUT_PATH=$IDENTIFIERS_OUT_PATH
 echo SOURCE_COUNTS_OUT_PATH=$SOURCE_COUNTS_OUT_PATH
 echo ORGANISMAL_SPECIES=$ORGANISMAL_SPECIES
+echo MODEL_NO_RXNS=$MODEL_NO_RXNS
+echo RXN_FREE_EXPORT_DIR_PATH=$RXN_FREE_EXPORT_DIR_PATH
+echo RXN_FREE_SBML_DFS_OUT_PATH=$RXN_FREE_SBML_DFS_OUT_PATH
+echo RXN_FREE_GRAPH_OUT_PATH=$RXN_FREE_GRAPH_OUT_PATH
+echo RXN_FREE_IDENTIFIERS_OUT_PATH=$RXN_FREE_IDENTIFIERS_OUT_PATH
 ```
 
 # Format Pathways
@@ -121,7 +154,6 @@ echo ORGANISMAL_SPECIES=$ORGANISMAL_SPECIES
 
 ```{bash load_reactome}
 source .rvars
-
 REACTOME_DIR=$CACHE_DIR_PATH/reactome
 PW_INDEX_URI=$CACHE_DIR_PATH/reactome/sbml/pw_index.tsv
 OUTPUT_URI=$CACHE_DIR_PATH/reactome/reactome.pkl
@@ -134,17 +166,17 @@ if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     
     if [[ ! -d "$REACTOME_DIR" ]]; then
         echo "Downlaoding Reactome data to $REACTOME_DIR"
-        python -m napistu ingestion reactome $REACTOME_DIR
+        napistu ingestion reactome $REACTOME_DIR
     else
         echo "Skipping Reactome download since $REACTOME_DIR exists; manually delete this to force re-download"
     fi
         
-    python -m napistu integrate reactome --permissive --overwrite $PW_INDEX_URI $ORGANISMAL_SPECIES $OUTPUT_URI
+    napistu integrate reactome --permissive --overwrite $PW_INDEX_URI $ORGANISMAL_SPECIES $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 ## Reactome FI
@@ -162,17 +194,17 @@ if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     
     if [[ ! -f "$REACTOME_FI_TSV" ]]; then
         echo "Downlaoding Reactome-FI data to $REACTOME_FI_TSV"
-        python -m napistu ingestion reactome_fi $REACTOME_FI_TSV
+        napistu ingestion reactome_fi $REACTOME_FI_TSV
     else
         echo "Skipping Reactome-FI download since $REACTOME_DIR exists; manually delete this to force re-download"
     fi
         
-    python -m napistu integrate reactome_fi $REACTOME_FI_TSV $OUTPUT_URI
+    napistu integrate reactome_fi --overwrite $REACTOME_FI_TSV $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 ## Metabolic model - recon3D
@@ -194,17 +226,17 @@ if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     
     if [[ ! -d $BIGG_DIR ]]; then
         echo "Downlaoding BiGG models to $BIGG_DIR"
-        python -m napistu ingestion bigg $BIGG_DIR
+        napistu ingestion bigg $BIGG_DIR
     else
         echo "Skipping BiGG download since $BIGG_DIR exists; manually delete this to force re-download"
     fi
         
-    python -m napistu integrate bigg $BIGG_DIR/pw_index.tsv $ORGANISMAL_SPECIES $OUTPUT_URI
+    napistu integrate bigg $BIGG_DIR/pw_index.tsv $ORGANISMAL_SPECIES $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 ## STRING
@@ -222,6 +254,7 @@ STRING_ALIASES_URI=$CACHE_DIR_PATH/string_aliases.tsv
 HPA_SUBCELL_URI=$CACHE_DIR_PATH/hpa_subcell.tsv
 STRING_PKL_URI=$CACHE_DIR_PATH/string.pkl
 OUTPUT_URI=$CACHE_DIR_PATH/hpa_filtered_string.pkl
+OVERWRITE="false"
 
 echo "Downloading results from STRING and HPA and integrating them to create a STRING sbml_dfs model at $OUTPUT_URI for $ORGANISMAL_SPECIES species"
 
@@ -230,32 +263,32 @@ if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     
     if [[ ! -f "$STRING_DB_URI" ]]; then
         echo "Downlaoding STRING database to $STRING_DB_URI"
-        python -m napistu ingestion string_db $ORGANISMAL_SPECIES $STRING_DB_URI
+        napistu ingestion string_db $ORGANISMAL_SPECIES $STRING_DB_URI
     else
         echo "Skipping STRING database download since $STRING_DB_URI exists; manually delete this to force re-download"
     fi
     
     if [[ ! -f "$STRING_ALIASES_URI" ]]; then
         echo "Downlaoding STRING aliases to $STRING_ALIASES_URI"
-        python -m napistu ingestion string_aliases $ORGANISMAL_SPECIES $STRING_ALIASES_URI
+        napistu ingestion string_aliases $ORGANISMAL_SPECIES $STRING_ALIASES_URI
     else
         echo "Skipping STRING alias download since $STRING_ALIASES_URI exists; manually delete this to force re-download"
     fi
       
     if [[ ! -f "$HPA_SUBCELL_URI" ]]; then
         echo "Downlaoding HPA subcellular aliases to $HPA_SUBCELL_URI"
-        python -m napistu ingestion proteinatlas_subcell $HPA_SUBCELL_URI
+        napistu ingestion proteinatlas_subcell $HPA_SUBCELL_URI
     else
         echo "Skipping HPA download since $HPA_SUBCELL_URI exists; manually delete this to force re-download"
     fi
       
-    python -m napistu integrate string_db --overwrite $STRING_DB_URI $STRING_ALIASES_URI $ORGANISMAL_SPECIES $STRING_PKL_URI
-    python -m napistu refine filter_hpa_compartments --overwrite $STRING_PKL_URI $HPA_SUBCELL_URI $OUTPUT_URI
+    napistu integrate string_db --overwrite $STRING_DB_URI $STRING_ALIASES_URI $ORGANISMAL_SPECIES $STRING_PKL_URI
+    napistu refine filter_hpa_compartments $STRING_PKL_URI $HPA_SUBCELL_URI $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 ## IntAct
@@ -271,22 +304,22 @@ echo "Downloading $ORGANISMAL_SPECIES IntAct PSI-MI .xml files and foramtting th
 if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Running ingestion/integration (file missing or OVERWRITE=true)..."
     
-    if [[ ! -d $BIGG_DIR ]]; then
+    if [[ ! -d $XML_DIR ]]; then
         echo "Downlaoding IntAct PSI-MI xmls to $XML_DIR"
-        python -m napistu ingestion intact $XML_DIR $ORGANISMAL_SPECIES
+        napistu ingestion intact $XML_DIR $ORGANISMAL_SPECIES
     else
         echo "Skipping IntAct download since $XML_DIR exists; manually delete this to force re-download"
     fi
         
-    python -m napistu integrate intact $XML_DIR $ORGANISMAL_SPECIES $OUTPUT_URI
+    napistu integrate intact --overwrite $XML_DIR $ORGANISMAL_SPECIES $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
-## Omnipath
+## OmniPath
 
 ```{bash omnipath}
 source .rvars
@@ -298,12 +331,12 @@ echo "Loading $ORGANISMAL_SPECIES OmniPath interactions and foramtting them as a
 if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Running integration (file missing or OVERWRITE=true)..."
     
-    python -m napistu integrate omnipath $ORGANISMAL_SPECIES $OUTPUT_URI
+    napistu integrate omnipath --overwrite $ORGANISMAL_SPECIES $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 ## TRRUST
@@ -324,17 +357,17 @@ if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     
     if [[ ! -f $TRRUST_TSV_URI ]]; then
         echo "Downlaoding TRRUST flat file to $TRRUST_TSV_URI"
-        python -m napistu ingestion trrust $TRRUST_TSV_URI
+        napistu ingestion trrust $TRRUST_TSV_URI
     else
         echo "Skipping TRRUST download since $TRRUST_TSV_URI exists; manually delete this to force re-download"
     fi
         
-    python -m napistu integrate trrust --overwrite $TRRUST_TSV_URI $OUTPUT_URI
+    napistu integrate trrust --overwrite $TRRUST_TSV_URI $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 ## Dogmatic Scaffold
@@ -351,12 +384,12 @@ echo "Creating a $ORGANISMAL_SPECIES dogmatic scaffold sbml_dfs model and saving
 if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Running integration (file missing or OVERWRITE=true)..."
     
-    python -m napistu integrate dogmatic_scaffold $ORGANISMAL_SPECIES $OUTPUT_URI
+    napistu integrate dogmatic_scaffold --overwrite $ORGANISMAL_SPECIES $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 # Unify compartmentalization
@@ -371,24 +404,25 @@ declare -A MODEL_PAIRS=(
     ["TRRUST"]="$CACHE_DIR_PATH/trrust.pkl:$CACHE_DIR_PATH/uncompartmentalized_trrust.pkl"
     ["BiGG"]="$CACHE_DIR_PATH/bigg.pkl:$CACHE_DIR_PATH/uncompartmentalized_bigg.pkl"
 )
+OVERWRITE="false"
 
 echo "Uncompartmentalizing all compartmentalized models"
-
 for model in "${!MODEL_PAIRS[@]}"; do
     # Split the input:output pair
     IFS=':' read -r input_uri output_uri <<< "${MODEL_PAIRS[$model]}"
     
     if [[ ! -f "$output_uri" ]] || [[ "$OVERWRITE" == "true" ]]; then
         echo "Uncompartmentalizing $model (file missing or OVERWRITE=true)..."
-        python -m napistu refine merge_model_compartments "$input_uri" "$output_uri"
+        napistu refine merge_model_compartments "$input_uri" "$output_uri"
     else
         echo "$model file exists and OVERWRITE=false, skipping"
     fi
     
     echo "Uncompartmentalized $model summary:"
-    python -m napistu helpers summarize_sbml_dfs "$output_uri"
+    napistu helpers summarize_sbml_dfs "$output_uri"
 done
 ```
+
 # Consensus
 
 ```{bash validate_sbml_dfs}
@@ -399,7 +433,7 @@ REACTOME_INPUT=$CACHE_DIR_PATH/reactome/uncompartmentalized_reactome.pkl
 STRING_INPUT=$CACHE_DIR_PATH/hpa_filtered_string.pkl
 TRRUST_INPUT=$CACHE_DIR_PATH/uncompartmentalized_trrust.pkl
 BIGG_INPUT=$CACHE_DIR_PATH/uncompartmentalized_bigg.pkl
-DOGMA_INPUT=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl
+# DOGMA_INPUT=$CACHE_DIR_PATH/dogma_sbml_dfs.pkl # exclude Dogma since it won't pass validation
 INTACT_INPUT=$CACHE_DIR_PATH/intact.pkl
 OMNIPATH_INPUT=$CACHE_DIR_PATH/omnipath.pkl
 REACTOME_FI_INPUT=$CACHE_DIR_PATH/reactome_fi.pkl
@@ -412,18 +446,16 @@ declare -A MODEL_PATHS=(
     ["HPA filtered STRING"]="$STRING_INPUT"
     ["TRRUST"]="$TRRUST_INPUT"
     ["BiGG"]="$BIGG_INPUT"
-    ["Dogma"]="$DOGMA_INPUT"
     ["IntAct"]="$INTACT_INPUT"
     ["OmniPath"]="$OMNIPATH_INPUT"
     ["Reactome-FI"]="$REACTOME_FI_INPUT"
 )
 
-
 echo "Validating SBML_dfs models..."
 for model in "${!MODEL_PATHS[@]}"; do
     path="${MODEL_PATHS[$model]}"
     echo "Validating $model model..."
-    python -m napistu helpers validate_sbml_dfs "$path"
+    napistu helpers validate_sbml_dfs "$path"
 done
 ```
 
@@ -469,16 +501,16 @@ echo "and saving results to $output_uri"
 if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Creating consensus model"
     
-    python -m napistu consensus create --nondogmatic "${input_args[@]}" "$OUTPUT_URI"
+    napistu consensus create --nondogmatic "${input_args[@]}" "$OUTPUT_URI"
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
 echo "Summarizing consensus model at $OUTPUT_URI"
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 
 echo "Performing post-consensus validation of the $OUTPUT_URI consensus"
-python -m napistu consensus check $OUTPUT_URI
+napistu consensus check $OUTPUT_URI
 ```
 
 # Drop cofactors
@@ -487,31 +519,35 @@ python -m napistu consensus check $OUTPUT_URI
 source .rvars
 INPUT_URI=$CACHE_DIR_PATH/consensus.pkl
 OUTPUT_URI=$SBML_DFS_OUT_PATH
+OVERWRITE="false"
 
 # Run the consensus command
 if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Dropping cofactors from $INPUT_URI and saving results to $OUTPUT_URI"
-    python -m napistu refine drop_cofactors $INPUT_URI $OUTPUT_URI
+    napistu refine drop_cofactors $INPUT_URI $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
 
+echo "Validating final SBML_dfs from $OUTPUT_URI"
+napistu helpers validate_sbml_dfs $OUTPUT_URI
 echo "Summarizing final SBML_dfs from $OUTPUT_URI"
-python -m napistu helpers summarize_sbml_dfs $OUTPUT_URI
+napistu helpers summarize_sbml_dfs $OUTPUT_URI
 ```
 
 # Export NapistuGraph/igraph representation and other results
 
 ## NapistuGraph/igraph
 
-```{bash export_igraph}
+```{bash export_napistu_graph}
 source .rvars
 INPUT_URI=$SBML_DFS_OUT_PATH
 OUTPUT_URI=$REGULATORY_GRAPH_OUT_PATH
+OVERWRITE="true"
 
 if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Generating a regulatory graph from $INPUT_URI and saving results to $OUTPUT_URI"
-    python -m napistu exporter export_igraph -a graph_attrs_spec.yaml -g regulatory -w mixed $INPUT_URI $OUTPUT_URI
+    napistu exporter export_napistu_graph -a graph_attrs_spec.yaml -g regulatory -w mixed --deduplicate_edges $INPUT_URI $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
@@ -523,11 +559,12 @@ fi
 source .rvars
 INPUT_URI=$REGULATORY_GRAPH_OUT_PATH
 OUTPUT_URI=$REGULATORY_DISTANCES_OUT_PATH
+OVERWRITE="true"
 
 if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Calculating precomputed distances from $INPUT_URI and saving results to $OUTPUT_URI"
     # when including dense sources like STRING making s > 3 is likely to run into OOM
-    python -m napistu exporter export_precomputed_distances -s 3 -q 0.3 -w "['weight', 'upstream_weight']" $INPUT_URI $OUTPUT_URI
+    napistu exporter export_precomputed_distances -s 3 -q 0.3 -w "['weight', 'weight_upstream']" $INPUT_URI $OUTPUT_URI
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
@@ -539,10 +576,11 @@ fi
 source .rvars
 INPUT_URI=$SBML_DFS_OUT_PATH
 OUTPUT_DIR=$SBML_DFS_TABLES_OUT_PATH
+OVERWRITE="true"
 
 if [[ ! -d "$OUTPUT_DIR" ]] || [[ "$OVERWRITE" == "true" ]]; then
     echo "Exporting flat files based on the SBML_dfs model at $INPUT_URI and storing results in $OUTPUT_DIR"
-    python -m napistu exporter export_smbl_dfs_tables --nondogmatic $INPUT_URI $OUTPUT_DIR
+    napistu exporter export_smbl_dfs_tables --nondogmatic $INPUT_URI $OUTPUT_DIR
 else
     echo "File exists and OVERWRITE=false, skipping ingestion/integration"
 fi
@@ -591,18 +629,18 @@ fi
 
 echo "All paths validated successfully!"
 
-python -m napistu helpers validate_assets \
+napistu helpers validate_assets \
     "$SBML_DFS_URI" \
     --napistu_graph_uri "$NAPISTU_GRAPH_URI" \
     --precomputed_distances_uri "$PRECOMPUTED_DISTANCES_URI" \
-    --identifiers_df_uri "$IDENTIFIERS_URI" 
+    --identifiers_df_uri "$IDENTIFIERS_URI"
 ```
 
 ## Tar and gzip
 
 ```{bash}
 source .rvars
-TAR_GZ_URI="$CACHE_DIR_PATH/human_consensus.tar.gz"
+TAR_GZ_URI="$CACHE_DIR_PATH/$MODEL_PRIMARY.tar.gz"
 DISTANCE_FILENAME=$(basename "$REGULATORY_DISTANCES_OUT_PATH")
 
 echo "Taring and g-zipping the $EXPORT_DIR_PATH (excluding $DISTANCE_FILENAME) as $TAR_GZ_URI"
@@ -613,22 +651,57 @@ tar -czvf "$TAR_GZ_URI" -C "$EXPORT_DIR_PATH" --exclude="$DISTANCE_FILENAME" --e
 
 ```{bash}
 source .rvars
-TAR_GZ_URI=$CACHE_DIR_PATH/human_consensus_w_distances.tar.gz
+TAR_GZ_URI=$CACHE_DIR_PATH/$MODEL_W_PRECOMPUTED_DISTANCES.tar.gz
 echo "Taring and g-zipping the $EXPORT_DIR_PATH as $TAR_GZ_URI"
 
 tar -czvf $TAR_GZ_URI -C $EXPORT_DIR_PATH --exclude=".DS_Store" .
+```
+
+### Reaction-free graphs
+
+A graph layout which doesn't include any reaction vertices
+
+- `-a graph_attrs_spec.yaml` specifies weighting approach (same as the primary NapistuGraph)
+- `-g regulatory` layout 
+- `-w mixed` weighting combines numeric STRING weights and constant weights for other sources
+- `-x always` drop reaction reaction vertices
+
+```{bash export_rxn_free_napistu_graph}
+source .rvars
+INPUT_URI=$SBML_DFS_OUT_PATH
+OUTPUT_URI=$RXN_FREE_GRAPH_OUT_PATH
+OVERWRITE="true"
+
+if [[ ! -f "$OUTPUT_URI" ]] || [[ "$OVERWRITE" == "true" ]]; then
+    echo "Generating a regulatory graph with no reaction vertices from $INPUT_URI and saving results to $OUTPUT_URI"
+    napistu exporter export_napistu_graph -a graph_attrs_spec.yaml -g regulatory -w mixed -x always $INPUT_URI $OUTPUT_URI
+else
+    echo "File exists and OVERWRITE=false, skipping ingestion/integration"
+fi
+```
+
+```{bash}
+source .rvars
+TAR_GZ_URI="$CACHE_DIR_PATH/$MODEL_NO_RXNS.tar.gz"
+echo "Relocating SBML_dfs from $SBML_DFS_OUT_PATH to tarr'd human_consensus directory"
+cp $SBML_DFS_OUT_PATH $RXN_FREEw_SBML_DFS_OUT_PATH
+
+echo "Relocating select flat files from $SBML_DFS_TABLES_OUT_PATH to tarr'd human_consensus directory"
+cp $SBML_DFS_TABLES_OUT_PATH/species_identifiers.tsv $RXN_FREE_IDENTIFIERS_OUT_PATH
+
+tar -czvf $TAR_GZ_URI -C $RXN_FREE_EXPORT_DIR_PATH --exclude=".DS_Store" .
 ```
 
 ## Sync with GCS
 
 ```{bash}
 source .rvars
-MANUAL_TRIGGER="false"
+MANUAL_TRIGGER="true"
 
-if [[ ! -f "$MANUAL_TRIGGER" ]]; then
+if [[ "$MANUAL_TRIGGER" == "true" ]]; then
     gcloud config set project shackett-napistu-public
-    gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus.tar.gz gs://shackett-napistu-public/human_consensus.tar.gz
-    gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/human_consensus_w_distances.tar.gz gs://shackett-napistu-public/human_consensus_w_distances.tar.gz
+    gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/$MODEL_PRIMARY.tar.gz gs://shackett-napistu-public/$MODEL_PRIMARY.tar.gz
+    gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/$MODEL_W_PRECOMPUTED_DISTANCES.tar.gz gs://shackett-napistu-public/$MODEL_W_PRECOMPUTED_DISTANCES.tar.gz
+    gsutil -h "Cache-Control:no-cache" cp $CACHE_DIR_PATH/$MODEL_NO_RXNS.tar.gz gs://shackett-napistu-public/$MODEL_NO_RXNS.tar.gz
 fi
 ```
-

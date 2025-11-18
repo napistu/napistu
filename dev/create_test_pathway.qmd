@@ -15,7 +15,7 @@ format:
 
 ## Intro
 
-This workflow is intended to create a simple pathway representation and its related outputs for testing and demonstrating CPR's functionality.
+This workflow is intended to create a simple pathway representation and its related outputs for testing and demonstrating Napistu's functionality.
 
 It follows a similar structure to `create_human_consensus.qmd` but includes fewer data sources
 
@@ -107,17 +107,17 @@ cp ../lib/napistu-py/src/tests/test_data/reactome_glycolysis.sbml $CACHE_DIR_PAT
 cp ../lib/napistu-py/src/tests/test_data/reactome_ppp.sbml $CACHE_DIR_PATH/reactome/
 cp ../lib/napistu-py/src/tests/test_data/reactome_tca.sbml $CACHE_DIR_PATH/reactome/
 
-python -m napistu integrate reactome --overwrite $CACHE_DIR_PATH/reactome/pw_index_metabolism.tsv $ORGANISMAL_SPECIES $OUTPUT_URI
+napistu integrate reactome --overwrite $CACHE_DIR_PATH/reactome/pw_index_metabolism.tsv $ORGANISMAL_SPECIES $OUTPUT_URI
 ```
 ```{bash model_summary}
 source .rvars_testpw
 input_uri=$CACHE_DIR_PATH/reactome.pkl
 
 echo "Summarize the model from $input_uri consensus"
-python -m napistu helpers summarize_sbml_dfs $input_uri
+napistu helpers summarize_sbml_dfs $input_uri
 
 echo "Performing post-consensus validation of the $input_uri consensus"
-python -m napistu consensus check $input_uri
+napistu consensus check $input_uri
 ```
 
 ## Remove cofactors
@@ -127,19 +127,19 @@ source .rvars_testpw
 input_uri=$CACHE_DIR_PATH/reactome.pkl
 output_uri=$SBML_DFS_OUT_PATH
 
-python -m napistu refine drop_cofactors $input_uri $output_uri
+napistu refine drop_cofactors $input_uri $output_uri
 ```
 
-## igraph
+## igraph / NapistuGraph
 
-```{bash export_igraph}
+```{bash export_napistu_graph}
 source .rvars_testpw
 input_uri=$SBML_DFS_OUT_PATH
 output_uri=$REGULATORY_GRAPH_OUT_PATH
 
 if [[ -f $input_uri ]] ; then
     echo "Generating a regulatory graph from $input_uri and saving results to $output_uri"
-    python -m napistu exporter export_igraph -g regulatory $input_uri $output_uri
+    napistu exporter export_napistu_graph -g regulatory --deduplicate_edges $input_uri $output_uri
 else
     echo "Missing $input_uri"
 fi
@@ -153,7 +153,7 @@ input_uri=$REGULATORY_GRAPH_OUT_PATH
 output_uri=$REGULATORY_DISTANCES_OUT_PATH
 
 echo "Saving species-to-species distances to $output_uri using the $input_uri graph"
-python -m napistu exporter export_precomputed_distances -s 10 $input_uri $output_uri
+napistu exporter export_precomputed_distances -s 10 $input_uri $output_uri
 ```
 
 ## smbl_dfs_tables
@@ -163,7 +163,7 @@ source .rvars_testpw
 input_uri=$SBML_DFS_OUT_PATH
 output_uri=$SBML_DFS_TABLES_OUT_PATH
 
-python -m napistu exporter export_smbl_dfs_tables $input_uri $output_uri
+napistu exporter export_smbl_dfs_tables $input_uri $output_uri
 ```
 
 ## Relocate sbml_dfs tables
@@ -208,7 +208,7 @@ fi
 
 echo "All paths validated successfully!"
 
-python -m napistu helpers validate_assets \
+napistu helpers validate_assets \
     "$sbml_dfs_uri" \
     --napistu_graph_uri "$napistu_graph_uri" \
     --precomputed_distances_uri "$precomputed_distances_uri" \
