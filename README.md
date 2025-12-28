@@ -24,13 +24,19 @@ This repository includes tutorials and documentation for the project while the f
 [![CI](https://github.com/napistu/napistu-py/actions/workflows/ci.yml/badge.svg)](https://github.com/napistu/napistu-py/actions/workflows/ci.yml)
 [![Release](https://github.com/napistu/napistu-py/actions/workflows/release.yml/badge.svg)](https://github.com/napistu/napistu-py/actions/workflows/release.yml)
 [![Deploy to Cloud Run](https://github.com/napistu/napistu-py/actions/workflows/deploy.yml/badge.svg)](https://github.com/napistu/napistu-py/actions/workflows/deploy.yml)
+
+- **[napistu-torch](https://github.com/napistu/napistu-torch)** - Napistu-Torch Python library: framework for applying graph neural networks to genome-scale pathways.
+
+[![PyPI](https://badge.fury.io/py/napistu-torch.svg)](https://pypi.org/project/napistu-torch/)
+[![Documentation](https://readthedocs.org/projects/napistu-torch/badge/?version=latest)](https://napistu-torch.readthedocs.io/)
+[![CI](https://github.com/napistu/napistu-torch/actions/workflows/ci.yml/badge.svg)](https://github.com/napistu/napistu-torch/actions/workflows/ci.yml)
+[![Release](https://github.com/napistu/napistu-torch/actions/workflows/release.yml/badge.svg)](https://github.com/napistu/napistu-torch/actions/workflows/release.yml)
  
 - **[napistu-r](https://github.com/napistu/napistu-r)** - Napistu R library: R-based network visualization and a few utilities called from `napitsu-py`.
 
-[![pkgdown](https://github.com/napistu/napistu-r/actions/workflows/pkgdown.yaml/badge.svg)](https://napistu.github.io/napistu-r/)
+[![pkgdown site](https://github.com/napistu/napistu-r/actions/workflows/pkgdown.yaml/badge.svg)](https://napistu.github.io/napistu-r/)
 [![R-CMD-check](https://github.com/napistu/napistu-r/actions/workflows/R-CMD-check-PR.yaml/badge.svg)](https://github.com/napistu/napistu-r/actions/workflows/R-CMD-check-PR.yaml)
-
-Naptisu is a rebrand and extension of [Calico Pathway Resources (CPR)](https://github.com/calico/opencpr): see [History](https://github.com/napistu/napistu/wiki/History).
+[![pkgdown](https://github.com/napistu/napistu-r/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/napistu/napistu-r/actions/workflows/pkgdown.yaml)
 
 # Using Napistu
 
@@ -60,11 +66,3 @@ We'll include examples here of how Napistu is used in the wild to address biolog
 
 - See `conventions.md` for an overview of Napistu's code conventions.
 - Github Actions is used to test the individual R and Python repositories. Ensure that tests pass before contributing a pull request.
-- Claude Code is used to propose fixes for straight forward issues. It is currently manually triggered:
-
-```bash
-# TO DO - add environment setup directions
-gh auth login
-./utils/claude-pr.sh 
-```
-
