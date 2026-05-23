@@ -47,7 +47,7 @@ These tutorials are intended as stand-alone demonstrations of Napistu's core fun
 - Downloading pathway data
 - Understanding the `sbml_dfs` format
 - Merging networks with the `consensus` module
-- Using the CPR Command Line Interface (CLI)
+- Using the Napistu Command Line Interface (CLI)
 - Formatting `sbml_dfs` as `napistu_graph` networks
 - Suggesting mechanisms with network approaches
 - Adding molecule- and reaction-level information to graphs
